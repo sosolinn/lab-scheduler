@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+  <title>LabScheduler 实验室预约系统</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div>
+        <div class="brand">
+          <div class="brand-icon">L</div>
+          <div>
+            <h1>LabScheduler</h1>
+            <p>实验室管理系统</p>
+          </div>
+        </div>
+
+        <nav class="nav-menu">
+          <button class="nav-item active" data-page="dashboard">
+            <span>⌂</span>
+            工作台
+          </button>
+
+          <button class="nav-item" data-page="booking">
+            <span>▣</span>
+            超净台预约
+          </button>
+
+          <button class="nav-item" data-page="duty">
+            <span>✓</span>
+            值日排班
+          </button>
+        </nav>
+      </div>
+
+      <div class="sidebar-footer">
+        <p>LabScheduler v1.0</p>
+        <span>数据暂存于当前浏览器</span>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">实验室公共设备管理</p>
+          <h2 id="pageTitle">工作台</h2>
+        </div>
+
+        <div class="user-info">
+          <div class="avatar">实</div>
+          <div>
+            <strong>实验室成员</strong>
+            <p>普通用户</p>
+          </div>
+        </div>
+      </header>
+
+      <section id="dashboard" class="page active">
+        <div class="welcome-card">
+          <div>
+            <span class="welcome-label">实验室管理助手</span>
+            <h3>欢迎使用实验室预约系统</h3>
+            <p>
+              在这里可以预约超净工作台、查看预约冲突，
+              并安排实验室值日任务。
+            </p>
+          </div>
+
+          <button class="primary-button" id="quickBookingButton">
+            新建预约
+          </button>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card">
+            <div class="stat-header">
+              <span>今日预约</span>
+              <div class="stat-icon">今</div>
+            </div>
+            <strong id="todayBookingCount">0</strong>
+            <p>今天需要使用超净台的预约</p>
+          </article>
+
+          <article class="stat-card">
+            <div class="stat-header">
+              <span>全部预约</span>
+              <div class="stat-icon">预</div>
+            </div>
+            <strong id="totalBookingCount">0</strong>
+            <p>当前浏览器保存的预约总数</p>
+          </article>
+
+          <article class="stat-card">
+            <div class="stat-header">
+              <span>值日任务</span>
+              <div class="stat-icon">值</div>
+            </div>
+            <strong id="totalDutyCount">0</strong>
+            <p>已经安排的值日任务总数</p>
+          </article>
+        </div>
+
+        <div class="content-card">
+          <div class="card-heading">
+            <div>
+              <h3>近期预约</h3>
+              <p>按照日期和时间自动排序</p>
+            </div>
+
+            <button class="text-button" data-go-page="booking">
+              查看全部
+            </button>
+          </div>
+
+          <div id="dashboardBookingList" class="record-list"></div>
+        </div>
+      </section>
+
+      <section id="booking" class="page">
+        <div class="section-grid">
+          <div class="content-card form-card">
+            <div class="card-heading">
+              <div>
+                <h3>新建超净台预约</h3>
+                <p>同一超净台的时间不能重叠</p>
+              </div>
+            </div>
+
+            <form id="bookingForm">
+              <div class="form-group">
+                <label for="bookingName">预约人</label>
+                <input
+                  type="text"
+                  id="bookingName"
+                  placeholder="请输入姓名"
+                  required
+                >
+              </div>
+
+              <div class="form-group">
+                <label for="benchNumber">超净台编号</label>
+                <select id="benchNumber" required>
+                  <option value="">请选择超净台</option>
+                  <option value="超净台 1">超净台 1</option>
+                  <option value="超净台 2">超净台 2</option>
+                  <option value="超净台 3">超净台 3</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="bookingDate">预约日期</label>
+                <input
+                  type="date"
+                  id="bookingDate"
+                  required
+                >
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="startTime">开始时间</label>
+                  <input
+                    type="time"
+                    id="startTime"
+                    required
+                  >
+                </div>
+
+                <div class="form-group">
+                  <label for="endTime">结束时间</label>
+                  <input
+                    type="time"
+                    id="endTime"
+                    required
+                  >
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="bookingPurpose">实验内容</label>
+                <textarea
+                  id="bookingPurpose"
+                  rows="4"
+                  placeholder="例如：HepG2 细胞传代"
+                ></textarea>
+              </div>
+
+              <button type="submit" class="primary-button full-width">
+                保存预约
+              </button>
+
+              <p id="bookingMessage" class="form-message"></p>
+            </form>
+          </div>
+
+          <div class="content-card">
+            <div class="card-heading">
+              <div>
+                <h3>预约记录</h3>
+                <p>预约成功后会显示在这里</p>
+              </div>
+            </div>
+
+            <div id="bookingList" class="record-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="duty" class="page">
+        <div class="section-grid">
+          <div class="content-card form-card">
+            <div class="card-heading">
+              <div>
+                <h3>添加值日安排</h3>
+                <p>记录值日人员和具体任务</p>
+              </div>
+            </div>
+
+            <form id="dutyForm">
+              <div class="form-group">
+                <label for="dutyName">值日人员</label>
+                <input
+                  type="text"
+                  id="dutyName"
+                  placeholder="请输入姓名"
+                  required
+                >
+              </div>
+
+              <div class="form-group">
+                <label for="dutyDate">值日日期</label>
+                <input
+                  type="date"
+                  id="dutyDate"
+                  required
+                >
+              </div>
+
+              <div class="form-group">
+                <label for="dutyTask">值日任务</label>
+                <select id="dutyTask" required>
+                  <option value="">请选择任务</option>
+                  <option value="实验台清洁">实验台清洁</option>
+                  <option value="超净台消毒">超净台消毒</option>
+                  <option value="垃圾处理">垃圾处理</option>
+                  <option value="培养箱清洁">培养箱清洁</option>
+                  <option value="公共区域整理">公共区域整理</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="dutyNote">备注</label>
+                <textarea
+                  id="dutyNote"
+                  rows="4"
+                  placeholder="可填写其他注意事项"
+                ></textarea>
+              </div>
+
+              <button type="submit" class="primary-button full-width">
+                保存排班
+              </button>
+
+              <p id="dutyMessage" class="form-message"></p>
+            </form>
+          </div>
+
+          <div class="content-card">
+            <div class="card-heading">
+              <div>
+                <h3>值日安排</h3>
+                <p>按照值日日期自动排序</p>
+              </div>
+            </div>
+
+            <div id="dutyList" class="record-list"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
