@@ -1,8 +1,15 @@
 const BOOKING_STORAGE_KEY = "labSchedulerBookings";
 const DUTY_STORAGE_KEY = "labSchedulerDuties";
 
-let bookings = loadData(BOOKING_STORAGE_KEY);
+const BENCH_ANIMAL = "超净台1（动物）";
+const BENCH_CELL = "超净台2（细胞）";
+const AVAILABLE_BENCHES = [BENCH_ANIMAL, BENCH_CELL];
+
+let bookings = normalizeBookings(loadData(BOOKING_STORAGE_KEY));
 let duties = loadData(DUTY_STORAGE_KEY);
+let visibleWeekStart = getStartOfWeek(new Date());
+
+saveData(BOOKING_STORAGE_KEY, bookings);
 
 const pageTitles = {
   dashboard: "工作台",
@@ -28,6 +35,10 @@ const dutyMessage = document.querySelector("#dutyMessage");
 
 const bookingDateInput = document.querySelector("#bookingDate");
 const dutyDateInput = document.querySelector("#dutyDate");
+const weekRangeLabel = document.querySelector("#weekRangeLabel");
+const prevWeekButton = document.querySelector("#prevWeekButton");
+const currentWeekButton = document.querySelector("#currentWeekButton");
+const nextWeekButton = document.querySelector("#nextWeekButton");
 
 function loadData(key) {
   try {
@@ -37,6 +48,28 @@ function loadData(key) {
     console.error("读取本地数据失败：", error);
     return [];
   }
+}
+
+function normalizeBookings(data) {
+  if (!Array.isArray(data)) {
+    return [];
+  }
+
+  return data
+    .map((booking) => {
+      const benchNameMap = {
+        "超净台 1": BENCH_ANIMAL,
+        "超净台1": BENCH_ANIMAL,
+        "超净台 2": BENCH_CELL,
+        "超净台2": BENCH_CELL
+      };
+
+      return {
+        ...booking,
+        bench: benchNameMap[booking.bench] || booking.bench
+      };
+    })
+    .filter((booking) => AVAILABLE_BENCHES.includes(booking.bench));
 }
 
 function saveData(key, data) {
@@ -51,13 +84,44 @@ function createId() {
   return `${Date.now()}-${Math.random()}`;
 }
 
-function getTodayString() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
+function padNumber(value) {
+  return String(value).padStart(2, "0");
+}
 
-  return `${year}-${month}-${day}`;
+function dateToString(date) {
+  return [
+    date.getFullYear(),
+    padNumber(date.getMonth() + 1),
+    padNumber(date.getDate())
+  ].join("-");
+}
+
+function parseDateString(dateString) {
+  const [year, month, day] = dateString
+    .split("-")
+    .map(Number);
+
+  return new Date(year, month - 1, day);
+}
+
+function addDays(date, amount) {
+  const result = new Date(date);
+  result.setDate(result.getDate() + amount);
+  return result;
+}
+
+function getStartOfWeek(date) {
+  const result = new Date(date);
+  result.setHours(0, 0, 0, 0);
+
+  const daysSinceMonday = (result.getDay() + 6) % 7;
+  result.setDate(result.getDate() - daysSinceMonday);
+
+  return result;
+}
+
+function getTodayString() {
+  return dateToString(new Date());
 }
 
 function formatDate(dateString) {
@@ -65,14 +129,26 @@ function formatDate(dateString) {
     return "";
   }
 
-  const date = new Date(`${dateString}T00:00:00`);
-
   return new Intl.DateTimeFormat("zh-CN", {
     year: "numeric",
     month: "long",
     day: "numeric",
     weekday: "short"
-  }).format(date);
+  }).format(parseDateString(dateString));
+}
+
+function formatWeekRange(startDate, endDate) {
+  const startYear = startDate.getFullYear();
+  const endYear = endDate.getFullYear();
+
+  const startText = `${startDate.getMonth() + 1}月${startDate.getDate()}日`;
+  const endText = `${endDate.getMonth() + 1}月${endDate.getDate()}日`;
+
+  if (startYear === endYear) {
+    return `${startYear}年 ${startText}—${endText}`;
+  }
+
+  return `${startYear}年${startText}—${endYear}年${endText}`;
 }
 
 function escapeHtml(value) {
@@ -94,6 +170,10 @@ function showPage(pageName) {
   });
 
   pageTitle.textContent = pageTitles[pageName];
+
+  if (pageName === "booking") {
+    renderBookings();
+  }
 }
 
 navItems.forEach((item) => {
@@ -114,6 +194,32 @@ document
     showPage("booking");
     document.querySelector("#bookingName").focus();
   });
+
+prevWeekButton.addEventListener("click", () => {
+  visibleWeekStart = addDays(visibleWeekStart, -7);
+  renderBookings();
+});
+
+currentWeekButton.addEventListener("click", () => {
+  visibleWeekStart = getStartOfWeek(new Date());
+  renderBookings();
+});
+
+nextWeekButton.addEventListener("click", () => {
+  visibleWeekStart = addDays(visibleWeekStart, 7);
+  renderBookings();
+});
+
+bookingDateInput.addEventListener("change", () => {
+  if (!bookingDateInput.value) {
+    return;
+  }
+
+  visibleWeekStart = getStartOfWeek(
+    parseDateString(bookingDateInput.value)
+  );
+  renderBookings();
+});
 
 function hasBookingConflict(newBooking) {
   return bookings.some((existingBooking) => {
@@ -145,6 +251,15 @@ bookingForm.addEventListener("submit", (event) => {
       document.querySelector("#bookingPurpose").value.trim()
   };
 
+  if (!AVAILABLE_BENCHES.includes(booking.bench)) {
+    showFormMessage(
+      bookingMessage,
+      "请选择可预约的超净台。",
+      "error"
+    );
+    return;
+  }
+
   if (booking.endTime <= booking.startTime) {
     showFormMessage(
       bookingMessage,
@@ -166,12 +281,16 @@ bookingForm.addEventListener("submit", (event) => {
   bookings.push(booking);
   saveData(BOOKING_STORAGE_KEY, bookings);
 
+  visibleWeekStart = getStartOfWeek(
+    parseDateString(booking.date)
+  );
+
   bookingForm.reset();
   bookingDateInput.value = getTodayString();
 
   showFormMessage(
     bookingMessage,
-    "预约保存成功。",
+    "预约保存成功，已显示在右侧周预约表中。",
     "success"
   );
 
@@ -229,54 +348,94 @@ function sortDuties(data) {
   );
 }
 
+function getBenchClass(bench) {
+  return bench === BENCH_ANIMAL ? "animal" : "cell";
+}
+
 function renderBookings() {
-  const sortedBookings = sortBookings(bookings);
+  const weekEnd = addDays(visibleWeekStart, 6);
+  const today = getTodayString();
+  const weekdayNames = [
+    "周一",
+    "周二",
+    "周三",
+    "周四",
+    "周五",
+    "周六",
+    "周日"
+  ];
 
-  if (sortedBookings.length === 0) {
-    bookingList.innerHTML = createEmptyState(
-      "暂无预约记录",
-      "填写左侧表单后，预约会显示在这里。"
-    );
-    return;
-  }
+  weekRangeLabel.textContent = formatWeekRange(
+    visibleWeekStart,
+    weekEnd
+  );
 
-  bookingList.innerHTML = sortedBookings
-    .map((booking) => {
+  bookingList.innerHTML = Array.from(
+    { length: 7 },
+    (_, index) => {
+      const date = addDays(visibleWeekStart, index);
+      const dateString = dateToString(date);
+      const dayBookings = sortBookings(bookings).filter(
+        (booking) => booking.date === dateString
+      );
+      const isToday = dateString === today;
+
+      const bookingItems = dayBookings.length
+        ? dayBookings
+            .map((booking) => {
+              const benchClass = getBenchClass(booking.bench);
+
+              return `
+                <article class="week-booking-item ${benchClass}">
+                  <button
+                    type="button"
+                    class="week-delete-button"
+                    data-delete-booking="${booking.id}"
+                    aria-label="删除${escapeHtml(booking.name)}的预约"
+                    title="删除预约"
+                  >
+                    ×
+                  </button>
+
+                  <strong class="week-booking-time">
+                    ${escapeHtml(booking.startTime)}
+                    –
+                    ${escapeHtml(booking.endTime)}
+                  </strong>
+                  <span class="week-booking-name">
+                    ${escapeHtml(booking.name)}
+                  </span>
+                  <span class="week-booking-bench">
+                    ${escapeHtml(booking.bench)}
+                  </span>
+                  <span class="week-booking-purpose">
+                    ${escapeHtml(booking.purpose || "未填写实验内容")}
+                  </span>
+                </article>
+              `;
+            })
+            .join("")
+        : '<p class="week-empty">暂无预约</p>';
+
       return `
-        <article class="record-item">
-          <div class="record-main">
-            <div class="record-title">
-              <strong>${escapeHtml(booking.name)}</strong>
-              <span class="badge">
-                ${escapeHtml(booking.bench)}
-              </span>
+        <section class="week-day${isToday ? " today" : ""}">
+          <header class="week-day-header">
+            <div class="week-day-name">
+              <span>${weekdayNames[index]}</span>
+              ${isToday ? '<span class="today-label">今天</span>' : ""}
             </div>
-
-            <div class="record-details">
-              <div>
-                ${formatDate(booking.date)}
-                ${escapeHtml(booking.startTime)}
-                –
-                ${escapeHtml(booking.endTime)}
-              </div>
-
-              <div>
-                实验内容：
-                ${escapeHtml(booking.purpose || "未填写")}
-              </div>
+            <div class="week-day-date">
+              ${date.getMonth() + 1}月${date.getDate()}日
             </div>
+          </header>
+
+          <div class="week-day-bookings">
+            ${bookingItems}
           </div>
-
-          <button
-            class="delete-button"
-            data-delete-booking="${booking.id}"
-          >
-            删除
-          </button>
-        </article>
+        </section>
       `;
-    })
-    .join("");
+    }
+  ).join("");
 }
 
 function renderDashboardBookings() {
