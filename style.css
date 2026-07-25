@@ -695,8 +695,267 @@ textarea:focus {
   background: white;
 }
 
+/* Duty checklist */
+.duty-section-grid {
+  grid-template-columns: minmax(560px, 1.15fr) minmax(380px, 0.85fr);
+}
+
+.duty-form-card {
+  position: static;
+}
+
+.duty-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.duty-checklist-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 4px 0 12px;
+}
+
+.duty-checklist-title {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.duty-selection-count {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.duty-check-all-button {
+  flex-shrink: 0;
+  padding: 7px 11px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--primary-light);
+}
+
+.duty-check-all-button:hover {
+  border-color: var(--primary);
+  background: #dbeafe;
+}
+
+.duty-checklist {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.duty-check-group {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: #fafafa;
+}
+
+.duty-check-group legend {
+  padding: 0 6px;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.duty-check-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 0;
+  padding: 8px 7px;
+  border-radius: 8px;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.55;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.duty-check-option + .duty-check-option {
+  margin-top: 2px;
+}
+
+.duty-check-option:hover {
+  background: var(--primary-light);
+}
+
+.duty-check-input {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  margin-top: 2px;
+  padding: 0;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.duty-check-input:focus {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.duty-abnormal-group {
+  margin-top: 2px;
+}
+
+.duty-records-card {
+  min-width: 0;
+}
+
+.duty-record-list {
+  gap: 14px;
+}
+
+.duty-record-item {
+  padding: 18px;
+  background: white;
+}
+
+.duty-record-main {
+  width: 100%;
+}
+
+.duty-record-title {
+  margin-bottom: 7px;
+}
+
+.duty-status-badge {
+  padding: 4px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.duty-status-badge.complete {
+  color: var(--success);
+  background: var(--success-bg);
+}
+
+.duty-status-badge.partial {
+  color: #b45309;
+  background: #fffbeb;
+}
+
+.duty-status-badge.legacy {
+  color: #6b7280;
+  background: #f3f4f6;
+}
+
+.duty-status-badge.abnormal {
+  color: var(--danger);
+  background: var(--danger-bg);
+}
+
+.duty-record-summary {
+  line-height: 1.65;
+}
+
+.duty-abnormal-record {
+  margin-top: 7px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  color: #4b5563;
+  background: #f9fafb;
+}
+
+.duty-abnormal-record.has-abnormal {
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  background: var(--danger-bg);
+}
+
+.duty-record-details {
+  margin-top: 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 11px;
+}
+
+.duty-record-details summary {
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+}
+
+.duty-record-checklist {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.duty-record-group {
+  padding: 11px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: #fafafa;
+}
+
+.duty-record-group h4 {
+  margin-bottom: 7px;
+  font-size: 12px;
+}
+
+.duty-record-group ul {
+  list-style: none;
+}
+
+.duty-record-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.duty-record-check + .duty-record-check {
+  margin-top: 5px;
+}
+
+.duty-record-check-icon {
+  flex: 0 0 14px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.duty-record-check.checked {
+  color: #166534;
+}
+
+.duty-record-check.unchecked {
+  color: #9ca3af;
+}
+
+.duty-legacy-note {
+  margin-top: 11px;
+  padding: 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: #4b5563;
+  font-size: 12px;
+  line-height: 1.65;
+  background: #f9fafb;
+}
+
+.duty-legacy-note p {
+  margin-top: 4px;
+}
+
 @media (max-width: 1180px) {
-  .booking-section-grid {
+  .booking-section-grid,
+  .duty-section-grid {
     grid-template-columns: 1fr;
   }
 
@@ -778,9 +1037,21 @@ textarea:focus {
     grid-template-columns: 1fr;
   }
 
-  .form-row {
+  .form-row,
+  .duty-meta-grid,
+  .duty-checklist,
+  .duty-record-checklist {
     grid-template-columns: 1fr;
     gap: 0;
+  }
+
+  .duty-checklist,
+  .duty-record-checklist {
+    gap: 10px;
+  }
+
+  .duty-checklist-header {
+    align-items: flex-start;
   }
 
   .record-item {
