@@ -5,11 +5,60 @@ const BENCH_ANIMAL = "超净台1（动物）";
 const BENCH_CELL = "超净台2（细胞）";
 const AVAILABLE_BENCHES = [BENCH_ANIMAL, BENCH_CELL];
 
+const DUTY_CHECKLIST = [
+  {
+    title: "1. 环境卫生",
+    items: [
+      "地面、实验台面清洁，无垃圾和积水",
+      "水池及周围无污物"
+    ]
+  },
+  {
+    title: "2. 超净台/生物安全柜",
+    items: [
+      "台面无遗留物",
+      "废液、废枪头及废弃培养物已清理",
+      "风机、照明和紫外灯状态正常"
+    ]
+  },
+  {
+    title: "3. CO₂培养箱",
+    items: [
+      "温度、CO₂浓度正常，无报警",
+      "培养箱门关闭严密",
+      "水盘水量正常，箱内无污染和液体洒漏",
+      "培养物标签清楚，无过期或污染细胞"
+    ]
+  },
+  {
+    title: "4. 公共设备",
+    items: [
+      "显微镜、离心机、水浴锅等清洁并关闭",
+      "水浴锅水位和水质正常",
+      "设备无异常噪声、报错或损坏"
+    ]
+  },
+  {
+    title: "5. 液氮与移液器",
+    items: [
+      "移液器已归位",
+      "液氮罐液氮充足"
+    ]
+  },
+  {
+    title: "6. 废弃物处理",
+    items: ["废液桶和垃圾袋未过满、无泄漏"]
+  }
+];
+
+const ALL_DUTY_ITEMS = DUTY_CHECKLIST.flatMap((group) => group.items);
+
 let bookings = normalizeBookings(loadData(BOOKING_STORAGE_KEY));
-let duties = loadData(DUTY_STORAGE_KEY);
+let duties = normalizeDuties(loadData(DUTY_STORAGE_KEY));
 let visibleWeekStart = getStartOfWeek(new Date());
 
 saveData(BOOKING_STORAGE_KEY, bookings);
+saveData(DUTY_STORAGE_KEY, duties);
 
 const pageTitles = {
   dashboard: "工作台",
@@ -35,6 +84,11 @@ const dutyMessage = document.querySelector("#dutyMessage");
 
 const bookingDateInput = document.querySelector("#bookingDate");
 const dutyDateInput = document.querySelector("#dutyDate");
+const dutyCheckboxes = Array.from(
+  document.querySelectorAll('input[name="dutyCheck"]')
+);
+const dutySelectionCount = document.querySelector("#dutySelectionCount");
+const selectAllDutyButton = document.querySelector("#selectAllDutyButton");
 const weekRangeLabel = document.querySelector("#weekRangeLabel");
 const prevWeekButton = document.querySelector("#prevWeekButton");
 const currentWeekButton = document.querySelector("#currentWeekButton");
@@ -70,6 +124,31 @@ function normalizeBookings(data) {
       };
     })
     .filter((booking) => AVAILABLE_BENCHES.includes(booking.bench));
+}
+
+function normalizeDuties(data) {
+  if (!Array.isArray(data)) {
+    return [];
+  }
+
+  return data.map((duty) => {
+    const checkedItems = Array.isArray(duty.checkedItems)
+      ? duty.checkedItems.filter((item) => ALL_DUTY_ITEMS.includes(item))
+      : [];
+
+    const isLegacyRecord = !Array.isArray(duty.checkedItems);
+
+    return {
+      id: duty.id || createId(),
+      name: duty.name || "未填写",
+      date: duty.date || getTodayString(),
+      checkedItems,
+      abnormal: duty.abnormal || "",
+      legacyTask: duty.legacyTask || (isLegacyRecord ? duty.task || "" : ""),
+      legacyNote: duty.legacyNote || (isLegacyRecord ? duty.note || "" : ""),
+      createdAt: duty.createdAt || ""
+    };
+  });
 }
 
 function saveData(key, data) {
@@ -221,6 +300,28 @@ bookingDateInput.addEventListener("change", () => {
   renderBookings();
 });
 
+function updateDutySelectionCount() {
+  const checkedCount = dutyCheckboxes.filter((checkbox) => checkbox.checked).length;
+  const allChecked = checkedCount === ALL_DUTY_ITEMS.length;
+
+  dutySelectionCount.textContent = `已勾选 ${checkedCount}/${ALL_DUTY_ITEMS.length} 项`;
+  selectAllDutyButton.textContent = allChecked ? "全部取消" : "全部勾选";
+}
+
+dutyCheckboxes.forEach((checkbox) => {
+  checkbox.addEventListener("change", updateDutySelectionCount);
+});
+
+selectAllDutyButton.addEventListener("click", () => {
+  const shouldCheck = !dutyCheckboxes.every((checkbox) => checkbox.checked);
+
+  dutyCheckboxes.forEach((checkbox) => {
+    checkbox.checked = shouldCheck;
+  });
+
+  updateDutySelectionCount();
+});
+
 function hasBookingConflict(newBooking) {
   return bookings.some((existingBooking) => {
     const sameDate =
@@ -300,12 +401,29 @@ bookingForm.addEventListener("submit", (event) => {
 dutyForm.addEventListener("submit", (event) => {
   event.preventDefault();
 
+  const checkedItems = dutyCheckboxes
+    .filter((checkbox) => checkbox.checked)
+    .map((checkbox) => checkbox.value);
+  const abnormal = document.querySelector("#dutyAbnormal").value.trim();
+
+  if (checkedItems.length === 0 && !abnormal) {
+    showFormMessage(
+      dutyMessage,
+      "请至少勾选一项值日内容，或填写异常记录。",
+      "error"
+    );
+    return;
+  }
+
   const duty = {
     id: createId(),
     name: document.querySelector("#dutyName").value.trim(),
     date: dutyDateInput.value,
-    task: document.querySelector("#dutyTask").value,
-    note: document.querySelector("#dutyNote").value.trim()
+    checkedItems,
+    abnormal,
+    legacyTask: "",
+    legacyNote: "",
+    createdAt: new Date().toISOString()
   };
 
   duties.push(duty);
@@ -313,10 +431,11 @@ dutyForm.addEventListener("submit", (event) => {
 
   dutyForm.reset();
   dutyDateInput.value = getTodayString();
+  updateDutySelectionCount();
 
   showFormMessage(
     dutyMessage,
-    "值日安排保存成功。",
+    `值日记录保存成功，已勾选 ${checkedItems.length}/${ALL_DUTY_ITEMS.length} 项。`,
     "success"
   );
 
@@ -343,9 +462,15 @@ function sortBookings(data) {
 }
 
 function sortDuties(data) {
-  return [...data].sort((a, b) =>
-    a.date.localeCompare(b.date)
-  );
+  return [...data].sort((a, b) => {
+    const dateComparison = b.date.localeCompare(a.date);
+
+    if (dateComparison !== 0) {
+      return dateComparison;
+    }
+
+    return (b.createdAt || "").localeCompare(a.createdAt || "");
+  });
 }
 
 function getBenchClass(bench) {
@@ -480,36 +605,95 @@ function renderDashboardBookings() {
     .join("");
 }
 
+function renderDutyChecklist(duty) {
+  const selectedItems = new Set(duty.checkedItems || []);
+
+  return DUTY_CHECKLIST.map((group) => {
+    const items = group.items
+      .map((item) => {
+        const isChecked = selectedItems.has(item);
+
+        return `
+          <li class="duty-record-check ${isChecked ? "checked" : "unchecked"}">
+            <span class="duty-record-check-icon">${isChecked ? "✓" : "—"}</span>
+            <span>${escapeHtml(item)}</span>
+          </li>
+        `;
+      })
+      .join("");
+
+    return `
+      <section class="duty-record-group">
+        <h4>${escapeHtml(group.title)}</h4>
+        <ul>${items}</ul>
+      </section>
+    `;
+  }).join("");
+}
+
 function renderDuties() {
   const sortedDuties = sortDuties(duties);
 
   if (sortedDuties.length === 0) {
     dutyList.innerHTML = createEmptyState(
-      "暂无值日安排",
-      "填写左侧表单后，值日安排会显示在这里。"
+      "暂无值日记录",
+      "完成左侧检查并保存后，记录会显示在这里。"
     );
     return;
   }
 
   dutyList.innerHTML = sortedDuties
     .map((duty) => {
+      const checkedCount = (duty.checkedItems || []).length;
+      const isComplete = checkedCount === ALL_DUTY_ITEMS.length;
+      const hasAbnormal = Boolean(duty.abnormal);
+      const hasLegacyContent = Boolean(duty.legacyTask || duty.legacyNote);
+      const statusText = hasLegacyContent
+        ? "旧版记录"
+        : `${checkedCount}/${ALL_DUTY_ITEMS.length} 项`;
+      const statusClass = hasLegacyContent
+        ? "legacy"
+        : isComplete
+          ? "complete"
+          : "partial";
+
+      const legacyMarkup = hasLegacyContent
+        ? `
+          <div class="duty-legacy-note">
+            <strong>旧版值日内容</strong>
+            ${duty.legacyTask ? `<p>任务：${escapeHtml(duty.legacyTask)}</p>` : ""}
+            ${duty.legacyNote ? `<p>备注：${escapeHtml(duty.legacyNote)}</p>` : ""}
+          </div>
+        `
+        : `
+          <details class="duty-record-details">
+            <summary>查看完整检查清单</summary>
+            <div class="duty-record-checklist">
+              ${renderDutyChecklist(duty)}
+            </div>
+          </details>
+        `;
+
       return `
-        <article class="record-item">
-          <div class="record-main">
-            <div class="record-title">
+        <article class="record-item duty-record-item">
+          <div class="record-main duty-record-main">
+            <div class="record-title duty-record-title">
               <strong>${escapeHtml(duty.name)}</strong>
-              <span class="badge">
-                ${escapeHtml(duty.task)}
+              <span class="duty-status-badge ${statusClass}">
+                ${statusText}
               </span>
+              ${hasAbnormal ? '<span class="duty-status-badge abnormal">有异常</span>' : ""}
             </div>
 
-            <div class="record-details">
+            <div class="record-details duty-record-summary">
               <div>${formatDate(duty.date)}</div>
-              <div>
-                备注：
-                ${escapeHtml(duty.note || "无")}
+              <div class="duty-abnormal-record${hasAbnormal ? " has-abnormal" : ""}">
+                <strong>异常记录：</strong>
+                ${escapeHtml(duty.abnormal || "无")}
               </div>
             </div>
+
+            ${legacyMarkup}
           </div>
 
           <button
@@ -607,5 +791,6 @@ function renderAll() {
 
 bookingDateInput.value = getTodayString();
 dutyDateInput.value = getTodayString();
+updateDutySelectionCount();
 
 renderAll();
