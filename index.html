@@ -41,7 +41,7 @@
       </div>
 
       <div class="sidebar-footer">
-        <p>LabScheduler v1.1</p>
+        <p>LabScheduler v1.2</p>
         <span>数据暂存于当前浏览器</span>
       </div>
     </aside>
@@ -246,73 +246,256 @@
       </section>
 
       <section id="duty" class="page">
-        <div class="section-grid">
-          <div class="content-card form-card">
+        <div class="section-grid duty-section-grid">
+          <div class="content-card duty-form-card">
             <div class="card-heading">
               <div>
-                <h3>添加值日安排</h3>
-                <p>记录值日人员和具体任务</p>
+                <h3>填写值日检查记录</h3>
+                <p>设置值日日期和值班人，并勾选已完成或状态正常的项目</p>
               </div>
             </div>
 
             <form id="dutyForm">
-              <div class="form-group">
-                <label for="dutyName">值日人员</label>
-                <input
-                  type="text"
-                  id="dutyName"
-                  placeholder="请输入姓名"
-                  required
+              <div class="duty-meta-grid">
+                <div class="form-group">
+                  <label for="dutyDate">值日日期</label>
+                  <input
+                    type="date"
+                    id="dutyDate"
+                    required
+                  >
+                </div>
+
+                <div class="form-group">
+                  <label for="dutyName">值班人</label>
+                  <input
+                    type="text"
+                    id="dutyName"
+                    placeholder="请输入值班人姓名"
+                    required
+                  >
+                </div>
+              </div>
+
+              <div class="duty-checklist-header">
+                <div>
+                  <span class="duty-checklist-title">值日内容</span>
+                  <span id="dutySelectionCount" class="duty-selection-count">
+                    已勾选 0/15 项
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  class="duty-check-all-button"
+                  id="selectAllDutyButton"
                 >
+                  全部勾选
+                </button>
               </div>
 
-              <div class="form-group">
-                <label for="dutyDate">值日日期</label>
-                <input
-                  type="date"
-                  id="dutyDate"
-                  required
-                >
+              <div class="duty-checklist">
+                <fieldset class="duty-check-group">
+                  <legend>1. 环境卫生</legend>
+
+                  <label class="duty-check-option">
+                    <input
+                      type="checkbox"
+                      class="duty-check-input"
+                      name="dutyCheck"
+                      value="地面、实验台面清洁，无垃圾和积水"
+                    >
+                    <span>地面、实验台面清洁，无垃圾和积水</span>
+                  </label>
+
+                  <label class="duty-check-option">
+                    <input
+                      type="checkbox"
+                      class="duty-check-input"
+                      name="dutyCheck"
+                      value="水池及周围无污物"
+                    >
+                    <span>水池及周围无污物</span>
+                  </label>
+                </fieldset>
+
+                <fieldset class="duty-check-group">
+                  <legend>2. 超净台/生物安全柜</legend>
+
+                  <label class="duty-check-option">
+                    <input
+                      type="checkbox"
+                      class="duty-check-input"
+                      name="dutyCheck"
+                      value="台面无遗留物"
+                    >
+                    <span>台面无遗留物</span>
+                  </label>
+
+                  <label class="duty-check-option">
+                    <input
+                      type="checkbox"
+                      class="duty-check-input"
+                      name="dutyCheck"
+                      value="废液、废枪头及废弃培养物已清理"
+                    >
+                    <span>废液、废枪头及废弃培养物已清理</span>
+                  </label>
+
+                  <label class="duty-check-option">
+                    <input
+                      type="checkbox"
+                      class="duty-check-input"
+                      name="dutyCheck"
+                      value="风机、照明和紫外灯状态正常"
+                    >
+                    <span>风机、照明和紫外灯状态正常</span>
+                  </label>
+                </fieldset>
+
+                <fieldset class="duty-check-group">
+                  <legend>3. CO₂培养箱</legend>
+
+                  <label class="duty-check-option">
+                    <input
+                      type="checkbox"
+                      class="duty-check-input"
+                      name="dutyCheck"
+                      value="温度、CO₂浓度正常，无报警"
+                    >
+                    <span>温度、CO₂浓度正常，无报警</span>
+                  </label>
+
+                  <label class="duty-check-option">
+                    <input
+                      type="checkbox"
+                      class="duty-check-input"
+                      name="dutyCheck"
+                      value="培养箱门关闭严密"
+                    >
+                    <span>培养箱门关闭严密</span>
+                  </label>
+
+                  <label class="duty-check-option">
+                    <input
+                      type="checkbox"
+                      class="duty-check-input"
+                      name="dutyCheck"
+                      value="水盘水量正常，箱内无污染和液体洒漏"
+                    >
+                    <span>水盘水量正常，箱内无污染和液体洒漏</span>
+                  </label>
+
+                  <label class="duty-check-option">
+                    <input
+                      type="checkbox"
+                      class="duty-check-input"
+                      name="dutyCheck"
+                      value="培养物标签清楚，无过期或污染细胞"
+                    >
+                    <span>培养物标签清楚，无过期或污染细胞</span>
+                  </label>
+                </fieldset>
+
+                <fieldset class="duty-check-group">
+                  <legend>4. 公共设备</legend>
+
+                  <label class="duty-check-option">
+                    <input
+                      type="checkbox"
+                      class="duty-check-input"
+                      name="dutyCheck"
+                      value="显微镜、离心机、水浴锅等清洁并关闭"
+                    >
+                    <span>显微镜、离心机、水浴锅等清洁并关闭</span>
+                  </label>
+
+                  <label class="duty-check-option">
+                    <input
+                      type="checkbox"
+                      class="duty-check-input"
+                      name="dutyCheck"
+                      value="水浴锅水位和水质正常"
+                    >
+                    <span>水浴锅水位和水质正常</span>
+                  </label>
+
+                  <label class="duty-check-option">
+                    <input
+                      type="checkbox"
+                      class="duty-check-input"
+                      name="dutyCheck"
+                      value="设备无异常噪声、报错或损坏"
+                    >
+                    <span>设备无异常噪声、报错或损坏</span>
+                  </label>
+                </fieldset>
+
+                <fieldset class="duty-check-group">
+                  <legend>5. 液氮与移液器</legend>
+
+                  <label class="duty-check-option">
+                    <input
+                      type="checkbox"
+                      class="duty-check-input"
+                      name="dutyCheck"
+                      value="移液器已归位"
+                    >
+                    <span>移液器已归位</span>
+                  </label>
+
+                  <label class="duty-check-option">
+                    <input
+                      type="checkbox"
+                      class="duty-check-input"
+                      name="dutyCheck"
+                      value="液氮罐液氮充足"
+                    >
+                    <span>液氮罐液氮充足</span>
+                  </label>
+                </fieldset>
+
+                <fieldset class="duty-check-group">
+                  <legend>6. 废弃物处理</legend>
+
+                  <label class="duty-check-option">
+                    <input
+                      type="checkbox"
+                      class="duty-check-input"
+                      name="dutyCheck"
+                      value="废液桶和垃圾袋未过满、无泄漏"
+                    >
+                    <span>废液桶和垃圾袋未过满、无泄漏</span>
+                  </label>
+                </fieldset>
               </div>
 
-              <div class="form-group">
-                <label for="dutyTask">值日任务</label>
-                <select id="dutyTask" required>
-                  <option value="">请选择任务</option>
-                  <option value="实验台清洁">实验台清洁</option>
-                  <option value="超净台消毒">超净台消毒</option>
-                  <option value="垃圾处理">垃圾处理</option>
-                  <option value="培养箱清洁">培养箱清洁</option>
-                  <option value="公共区域整理">公共区域整理</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label for="dutyNote">备注</label>
+              <div class="form-group duty-abnormal-group">
+                <label for="dutyAbnormal">7. 异常记录</label>
                 <textarea
-                  id="dutyNote"
+                  id="dutyAbnormal"
                   rows="4"
-                  placeholder="可填写其他注意事项"
+                  placeholder="若发现报警、污染、损坏、液氮不足等情况，请在此记录；无异常可留空"
                 ></textarea>
               </div>
 
               <button type="submit" class="primary-button full-width">
-                保存排班
+                保存值日记录
               </button>
 
               <p id="dutyMessage" class="form-message"></p>
             </form>
           </div>
 
-          <div class="content-card">
+          <div class="content-card duty-records-card">
             <div class="card-heading">
               <div>
-                <h3>值日安排</h3>
-                <p>按照值日日期自动排序</p>
+                <h3>值日记录</h3>
+                <p>查看值班人员、完成情况和异常记录</p>
               </div>
             </div>
 
-            <div id="dutyList" class="record-list"></div>
+            <div id="dutyList" class="record-list duty-record-list"></div>
           </div>
         </div>
       </section>
