@@ -2,14 +2,10 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LabScheduler 实验室预约系统</title>
   <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
   <div class="app-layout">
     <aside class="sidebar">
@@ -27,12 +23,10 @@
             <span>⌂</span>
             工作台
           </button>
-
           <button class="nav-item" data-page="booking">
             <span>▣</span>
             超净台预约
           </button>
-
           <button class="nav-item" data-page="duty">
             <span>✓</span>
             值日排班
@@ -41,7 +35,7 @@
       </div>
 
       <div class="sidebar-footer">
-        <p>LabScheduler v1.2</p>
+        <p>LabScheduler v1.3</p>
         <span>数据暂存于当前浏览器</span>
       </div>
     </aside>
@@ -52,7 +46,6 @@
           <p class="eyebrow">实验室公共设备管理</p>
           <h2 id="pageTitle">工作台</h2>
         </div>
-
         <div class="user-info">
           <div class="avatar">实</div>
           <div>
@@ -67,38 +60,52 @@
           <div>
             <span class="welcome-label">实验室管理助手</span>
             <h3>欢迎使用实验室预约与值日管理系统</h3>
-            <p>
-              请选择需要使用的功能，进行超净台预约或填写实验室值日检查记录。
-            </p>
+            <p>请选择需要使用的功能，进行超净台预约或填写实验室值日检查记录。</p>
           </div>
-
-          <div
-            class="form-row"
-            style="min-width: 320px; margin: 0;"
-          >
-            <button
-              type="button"
-              class="primary-button"
-              id="quickBookingButton"
-            >
+          <div class="welcome-actions">
+            <button type="button" class="welcome-action-button" id="quickBookingButton">
               超净台预约
             </button>
-
-            <button
-              type="button"
-              class="primary-button"
-              data-go-page="duty"
-            >
+            <button type="button" class="welcome-action-button" data-go-page="duty">
               值日排班
             </button>
           </div>
         </div>
 
-        <div style="display: none;" aria-hidden="true">
+        <div class="dashboard-summary-grid">
+          <article class="dashboard-summary-card">
+            <div class="dashboard-summary-heading">
+              <div>
+                <span class="dashboard-summary-kicker">预约概览</span>
+                <h3>本周预约情况</h3>
+                <p id="dashboardWeekRange">本周</p>
+              </div>
+              <button type="button" class="summary-link-button" data-go-page="booking">
+                查看详情
+              </button>
+            </div>
+            <div id="dashboardBookingList" class="dashboard-summary-list"></div>
+          </article>
+
+          <article class="dashboard-summary-card">
+            <div class="dashboard-summary-heading">
+              <div>
+                <span class="dashboard-summary-kicker">值日概览</span>
+                <h3>本周值日情况</h3>
+                <p>值班人员、完成进度与异常情况</p>
+              </div>
+              <button type="button" class="summary-link-button" data-go-page="duty">
+                查看详情
+              </button>
+            </div>
+            <div id="dashboardDutyList" class="dashboard-summary-list"></div>
+          </article>
+        </div>
+
+        <div class="dashboard-hidden-stats" aria-hidden="true">
           <span id="todayBookingCount">0</span>
           <span id="totalBookingCount">0</span>
           <span id="totalDutyCount">0</span>
-          <div id="dashboardBookingList"></div>
         </div>
       </section>
 
@@ -115,12 +122,7 @@
             <form id="bookingForm">
               <div class="form-group">
                 <label for="bookingName">预约人</label>
-                <input
-                  type="text"
-                  id="bookingName"
-                  placeholder="请输入姓名"
-                  required
-                >
+                <input type="text" id="bookingName" placeholder="请输入姓名" required>
               </div>
 
               <div class="form-group">
@@ -134,46 +136,26 @@
 
               <div class="form-group">
                 <label for="bookingDate">预约日期</label>
-                <input
-                  type="date"
-                  id="bookingDate"
-                  required
-                >
+                <input type="date" id="bookingDate" required>
               </div>
 
               <div class="form-row">
                 <div class="form-group">
                   <label for="startTime">开始时间</label>
-                  <input
-                    type="time"
-                    id="startTime"
-                    required
-                  >
+                  <input type="time" id="startTime" required>
                 </div>
-
                 <div class="form-group">
                   <label for="endTime">结束时间</label>
-                  <input
-                    type="time"
-                    id="endTime"
-                    required
-                  >
+                  <input type="time" id="endTime" required>
                 </div>
               </div>
 
               <div class="form-group">
                 <label for="bookingPurpose">实验内容</label>
-                <textarea
-                  id="bookingPurpose"
-                  rows="4"
-                  placeholder="例如：HepG2 细胞传代"
-                ></textarea>
+                <textarea id="bookingPurpose" rows="4" placeholder="例如：HepG2 细胞传代"></textarea>
               </div>
 
-              <button type="submit" class="primary-button full-width">
-                保存预约
-              </button>
-
+              <button type="submit" class="primary-button full-width">保存预约</button>
               <p id="bookingMessage" class="form-message"></p>
             </form>
           </div>
@@ -184,31 +166,10 @@
                 <h3>一周预约情况</h3>
                 <p id="weekRangeLabel">本周预约</p>
               </div>
-
               <div class="week-navigation" aria-label="切换预约周">
-                <button
-                  type="button"
-                  class="week-nav-button"
-                  id="prevWeekButton"
-                  aria-label="上一周"
-                >
-                  ‹
-                </button>
-                <button
-                  type="button"
-                  class="week-today-button"
-                  id="currentWeekButton"
-                >
-                  本周
-                </button>
-                <button
-                  type="button"
-                  class="week-nav-button"
-                  id="nextWeekButton"
-                  aria-label="下一周"
-                >
-                  ›
-                </button>
+                <button type="button" class="week-nav-button" id="prevWeekButton" aria-label="上一周">‹</button>
+                <button type="button" class="week-today-button" id="currentWeekButton">本周</button>
+                <button type="button" class="week-nav-button" id="nextWeekButton" aria-label="下一周">›</button>
               </div>
             </div>
 
@@ -238,37 +199,20 @@
               <div class="duty-meta-grid">
                 <div class="form-group">
                   <label for="dutyDate">值日日期</label>
-                  <input
-                    type="date"
-                    id="dutyDate"
-                    required
-                  >
+                  <input type="date" id="dutyDate" required>
                 </div>
-
                 <div class="form-group">
                   <label for="dutyName">值班人</label>
-                  <input
-                    type="text"
-                    id="dutyName"
-                    placeholder="请输入值班人姓名"
-                    required
-                  >
+                  <input type="text" id="dutyName" placeholder="请输入值班人姓名" required>
                 </div>
               </div>
 
               <div class="duty-checklist-header">
                 <div>
                   <span class="duty-checklist-title">值日内容</span>
-                  <span id="dutySelectionCount" class="duty-selection-count">
-                    已勾选 0/15 项
-                  </span>
+                  <span id="dutySelectionCount" class="duty-selection-count">已勾选 0/15 项</span>
                 </div>
-
-                <button
-                  type="button"
-                  class="duty-check-all-button"
-                  id="selectAllDutyButton"
-                >
+                <button type="button" class="duty-check-all-button" id="selectAllDutyButton">
                   全部勾选
                 </button>
               </div>
@@ -276,174 +220,84 @@
               <div class="duty-checklist">
                 <fieldset class="duty-check-group">
                   <legend>1. 环境卫生</legend>
-
                   <label class="duty-check-option">
-                    <input
-                      type="checkbox"
-                      class="duty-check-input"
-                      name="dutyCheck"
-                      value="地面、实验台面清洁，无垃圾和积水"
-                    >
+                    <input type="checkbox" class="duty-check-input" name="dutyCheck" value="地面、实验台面清洁，无垃圾和积水">
                     <span>地面、实验台面清洁，无垃圾和积水</span>
                   </label>
-
                   <label class="duty-check-option">
-                    <input
-                      type="checkbox"
-                      class="duty-check-input"
-                      name="dutyCheck"
-                      value="水池及周围无污物"
-                    >
+                    <input type="checkbox" class="duty-check-input" name="dutyCheck" value="水池及周围无污物">
                     <span>水池及周围无污物</span>
                   </label>
                 </fieldset>
 
                 <fieldset class="duty-check-group">
                   <legend>2. 超净台/生物安全柜</legend>
-
                   <label class="duty-check-option">
-                    <input
-                      type="checkbox"
-                      class="duty-check-input"
-                      name="dutyCheck"
-                      value="台面无遗留物"
-                    >
+                    <input type="checkbox" class="duty-check-input" name="dutyCheck" value="台面无遗留物">
                     <span>台面无遗留物</span>
                   </label>
-
                   <label class="duty-check-option">
-                    <input
-                      type="checkbox"
-                      class="duty-check-input"
-                      name="dutyCheck"
-                      value="废液、废枪头及废弃培养物已清理"
-                    >
+                    <input type="checkbox" class="duty-check-input" name="dutyCheck" value="废液、废枪头及废弃培养物已清理">
                     <span>废液、废枪头及废弃培养物已清理</span>
                   </label>
-
                   <label class="duty-check-option">
-                    <input
-                      type="checkbox"
-                      class="duty-check-input"
-                      name="dutyCheck"
-                      value="风机、照明和紫外灯状态正常"
-                    >
+                    <input type="checkbox" class="duty-check-input" name="dutyCheck" value="风机、照明和紫外灯状态正常">
                     <span>风机、照明和紫外灯状态正常</span>
                   </label>
                 </fieldset>
 
                 <fieldset class="duty-check-group">
                   <legend>3. CO₂培养箱</legend>
-
                   <label class="duty-check-option">
-                    <input
-                      type="checkbox"
-                      class="duty-check-input"
-                      name="dutyCheck"
-                      value="温度、CO₂浓度正常，无报警"
-                    >
+                    <input type="checkbox" class="duty-check-input" name="dutyCheck" value="温度、CO₂浓度正常，无报警">
                     <span>温度、CO₂浓度正常，无报警</span>
                   </label>
-
                   <label class="duty-check-option">
-                    <input
-                      type="checkbox"
-                      class="duty-check-input"
-                      name="dutyCheck"
-                      value="培养箱门关闭严密"
-                    >
+                    <input type="checkbox" class="duty-check-input" name="dutyCheck" value="培养箱门关闭严密">
                     <span>培养箱门关闭严密</span>
                   </label>
-
                   <label class="duty-check-option">
-                    <input
-                      type="checkbox"
-                      class="duty-check-input"
-                      name="dutyCheck"
-                      value="水盘水量正常，箱内无污染和液体洒漏"
-                    >
+                    <input type="checkbox" class="duty-check-input" name="dutyCheck" value="水盘水量正常，箱内无污染和液体洒漏">
                     <span>水盘水量正常，箱内无污染和液体洒漏</span>
                   </label>
-
                   <label class="duty-check-option">
-                    <input
-                      type="checkbox"
-                      class="duty-check-input"
-                      name="dutyCheck"
-                      value="培养物标签清楚，无过期或污染细胞"
-                    >
+                    <input type="checkbox" class="duty-check-input" name="dutyCheck" value="培养物标签清楚，无过期或污染细胞">
                     <span>培养物标签清楚，无过期或污染细胞</span>
                   </label>
                 </fieldset>
 
                 <fieldset class="duty-check-group">
                   <legend>4. 公共设备</legend>
-
                   <label class="duty-check-option">
-                    <input
-                      type="checkbox"
-                      class="duty-check-input"
-                      name="dutyCheck"
-                      value="显微镜、离心机、水浴锅等清洁并关闭"
-                    >
+                    <input type="checkbox" class="duty-check-input" name="dutyCheck" value="显微镜、离心机、水浴锅等清洁并关闭">
                     <span>显微镜、离心机、水浴锅等清洁并关闭</span>
                   </label>
-
                   <label class="duty-check-option">
-                    <input
-                      type="checkbox"
-                      class="duty-check-input"
-                      name="dutyCheck"
-                      value="水浴锅水位和水质正常"
-                    >
+                    <input type="checkbox" class="duty-check-input" name="dutyCheck" value="水浴锅水位和水质正常">
                     <span>水浴锅水位和水质正常</span>
                   </label>
-
                   <label class="duty-check-option">
-                    <input
-                      type="checkbox"
-                      class="duty-check-input"
-                      name="dutyCheck"
-                      value="设备无异常噪声、报错或损坏"
-                    >
+                    <input type="checkbox" class="duty-check-input" name="dutyCheck" value="设备无异常噪声、报错或损坏">
                     <span>设备无异常噪声、报错或损坏</span>
                   </label>
                 </fieldset>
 
                 <fieldset class="duty-check-group">
                   <legend>5. 液氮与移液器</legend>
-
                   <label class="duty-check-option">
-                    <input
-                      type="checkbox"
-                      class="duty-check-input"
-                      name="dutyCheck"
-                      value="移液器已归位"
-                    >
+                    <input type="checkbox" class="duty-check-input" name="dutyCheck" value="移液器已归位">
                     <span>移液器已归位</span>
                   </label>
-
                   <label class="duty-check-option">
-                    <input
-                      type="checkbox"
-                      class="duty-check-input"
-                      name="dutyCheck"
-                      value="液氮罐液氮充足"
-                    >
+                    <input type="checkbox" class="duty-check-input" name="dutyCheck" value="液氮罐液氮充足">
                     <span>液氮罐液氮充足</span>
                   </label>
                 </fieldset>
 
                 <fieldset class="duty-check-group">
                   <legend>6. 废弃物处理</legend>
-
                   <label class="duty-check-option">
-                    <input
-                      type="checkbox"
-                      class="duty-check-input"
-                      name="dutyCheck"
-                      value="废液桶和垃圾袋未过满、无泄漏"
-                    >
+                    <input type="checkbox" class="duty-check-input" name="dutyCheck" value="废液桶和垃圾袋未过满、无泄漏">
                     <span>废液桶和垃圾袋未过满、无泄漏</span>
                   </label>
                 </fieldset>
@@ -451,17 +305,10 @@
 
               <div class="form-group duty-abnormal-group">
                 <label for="dutyAbnormal">7. 异常记录</label>
-                <textarea
-                  id="dutyAbnormal"
-                  rows="4"
-                  placeholder="若发现报警、污染、损坏、液氮不足等情况，请在此记录；无异常可留空"
-                ></textarea>
+                <textarea id="dutyAbnormal" rows="4" placeholder="若发现报警、污染、损坏、液氮不足等情况，请在此记录；无异常可留空"></textarea>
               </div>
 
-              <button type="submit" class="primary-button full-width">
-                保存值日记录
-              </button>
-
+              <button type="submit" class="primary-button full-width">保存值日记录</button>
               <p id="dutyMessage" class="form-message"></p>
             </form>
           </div>
@@ -473,7 +320,6 @@
                 <p>查看值班人员、完成情况和异常记录</p>
               </div>
             </div>
-
             <div id="dutyList" class="record-list duty-record-list"></div>
           </div>
         </div>
