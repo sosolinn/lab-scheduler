@@ -66,60 +66,39 @@
         <div class="welcome-card">
           <div>
             <span class="welcome-label">实验室管理助手</span>
-            <h3>欢迎使用实验室预约系统</h3>
+            <h3>欢迎使用实验室预约与值日管理系统</h3>
             <p>
-              在这里可以预约动物或细胞超净台、查看预约冲突，
-              并安排实验室值日任务。
+              请选择需要使用的功能，进行超净台预约或填写实验室值日检查记录。
             </p>
           </div>
 
-          <button class="primary-button" id="quickBookingButton">
-            新建预约
-          </button>
-        </div>
+          <div
+            class="form-row"
+            style="min-width: 320px; margin: 0;"
+          >
+            <button
+              type="button"
+              class="primary-button"
+              id="quickBookingButton"
+            >
+              超净台预约
+            </button>
 
-        <div class="stats-grid">
-          <article class="stat-card">
-            <div class="stat-header">
-              <span>今日预约</span>
-              <div class="stat-icon">今</div>
-            </div>
-            <strong id="todayBookingCount">0</strong>
-            <p>今天需要使用超净台的预约</p>
-          </article>
-
-          <article class="stat-card">
-            <div class="stat-header">
-              <span>全部预约</span>
-              <div class="stat-icon">预</div>
-            </div>
-            <strong id="totalBookingCount">0</strong>
-            <p>当前浏览器保存的预约总数</p>
-          </article>
-
-          <article class="stat-card">
-            <div class="stat-header">
-              <span>值日任务</span>
-              <div class="stat-icon">值</div>
-            </div>
-            <strong id="totalDutyCount">0</strong>
-            <p>已经安排的值日任务总数</p>
-          </article>
-        </div>
-
-        <div class="content-card">
-          <div class="card-heading">
-            <div>
-              <h3>近期预约</h3>
-              <p>按照日期和时间自动排序</p>
-            </div>
-
-            <button class="text-button" data-go-page="booking">
-              查看一周预约
+            <button
+              type="button"
+              class="primary-button"
+              data-go-page="duty"
+            >
+              值日排班
             </button>
           </div>
+        </div>
 
-          <div id="dashboardBookingList" class="record-list"></div>
+        <div style="display: none;" aria-hidden="true">
+          <span id="todayBookingCount">0</span>
+          <span id="totalBookingCount">0</span>
+          <span id="totalDutyCount">0</span>
+          <div id="dashboardBookingList"></div>
         </div>
       </section>
 
