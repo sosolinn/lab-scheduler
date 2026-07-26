@@ -40,10 +40,7 @@ const DUTY_CHECKLIST = [
   },
   {
     title: "5. 液氮与移液器",
-    items: [
-      "移液器已归位",
-      "液氮罐液氮充足"
-    ]
+    items: ["移液器已归位", "液氮罐液氮充足"]
   },
   {
     title: "6. 废弃物处理",
@@ -69,19 +66,15 @@ const pageTitles = {
 const navItems = document.querySelectorAll(".nav-item");
 const pages = document.querySelectorAll(".page");
 const pageTitle = document.querySelector("#pageTitle");
-
 const bookingForm = document.querySelector("#bookingForm");
 const dutyForm = document.querySelector("#dutyForm");
-
 const bookingList = document.querySelector("#bookingList");
 const dutyList = document.querySelector("#dutyList");
-const dashboardBookingList = document.querySelector(
-  "#dashboardBookingList"
-);
-
+const dashboardBookingList = document.querySelector("#dashboardBookingList");
+const dashboardDutyList = document.querySelector("#dashboardDutyList");
+const dashboardWeekRange = document.querySelector("#dashboardWeekRange");
 const bookingMessage = document.querySelector("#bookingMessage");
 const dutyMessage = document.querySelector("#dutyMessage");
-
 const bookingDateInput = document.querySelector("#bookingDate");
 const dutyDateInput = document.querySelector("#dutyDate");
 const dutyCheckboxes = Array.from(
@@ -109,20 +102,18 @@ function normalizeBookings(data) {
     return [];
   }
 
-  return data
-    .map((booking) => {
-      const benchNameMap = {
-        "超净台 1": BENCH_ANIMAL,
-        "超净台1": BENCH_ANIMAL,
-        "超净台 2": BENCH_CELL,
-        "超净台2": BENCH_CELL
-      };
+  const benchNameMap = {
+    "超净台 1": BENCH_ANIMAL,
+    "超净台1": BENCH_ANIMAL,
+    "超净台 2": BENCH_CELL,
+    "超净台2": BENCH_CELL
+  };
 
-      return {
-        ...booking,
-        bench: benchNameMap[booking.bench] || booking.bench
-      };
-    })
+  return data
+    .map((booking) => ({
+      ...booking,
+      bench: benchNameMap[booking.bench] || booking.bench
+    }))
     .filter((booking) => AVAILABLE_BENCHES.includes(booking.bench));
 }
 
@@ -135,7 +126,6 @@ function normalizeDuties(data) {
     const checkedItems = Array.isArray(duty.checkedItems)
       ? duty.checkedItems.filter((item) => ALL_DUTY_ITEMS.includes(item))
       : [];
-
     const isLegacyRecord = !Array.isArray(duty.checkedItems);
 
     return {
@@ -159,7 +149,6 @@ function createId() {
   if (window.crypto && crypto.randomUUID) {
     return crypto.randomUUID();
   }
-
   return `${Date.now()}-${Math.random()}`;
 }
 
@@ -176,10 +165,7 @@ function dateToString(date) {
 }
 
 function parseDateString(dateString) {
-  const [year, month, day] = dateString
-    .split("-")
-    .map(Number);
-
+  const [year, month, day] = dateString.split("-").map(Number);
   return new Date(year, month - 1, day);
 }
 
@@ -192,10 +178,8 @@ function addDays(date, amount) {
 function getStartOfWeek(date) {
   const result = new Date(date);
   result.setHours(0, 0, 0, 0);
-
   const daysSinceMonday = (result.getDay() + 6) % 7;
   result.setDate(result.getDate() - daysSinceMonday);
-
   return result;
 }
 
@@ -216,17 +200,23 @@ function formatDate(dateString) {
   }).format(parseDateString(dateString));
 }
 
+function formatShortDate(dateString) {
+  const date = parseDateString(dateString);
+  const weekday = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"][
+    date.getDay()
+  ];
+  return `${date.getMonth() + 1}月${date.getDate()}日 ${weekday}`;
+}
+
 function formatWeekRange(startDate, endDate) {
   const startYear = startDate.getFullYear();
   const endYear = endDate.getFullYear();
-
   const startText = `${startDate.getMonth() + 1}月${startDate.getDate()}日`;
   const endText = `${endDate.getMonth() + 1}月${endDate.getDate()}日`;
 
   if (startYear === endYear) {
     return `${startYear}年 ${startText}—${endText}`;
   }
-
   return `${startYear}年${startText}—${endYear}年${endText}`;
 }
 
@@ -242,10 +232,7 @@ function showPage(pageName) {
   });
 
   navItems.forEach((item) => {
-    item.classList.toggle(
-      "active",
-      item.dataset.page === pageName
-    );
+    item.classList.toggle("active", item.dataset.page === pageName);
   });
 
   pageTitle.textContent = pageTitles[pageName];
@@ -256,23 +243,17 @@ function showPage(pageName) {
 }
 
 navItems.forEach((item) => {
-  item.addEventListener("click", () => {
-    showPage(item.dataset.page);
-  });
+  item.addEventListener("click", () => showPage(item.dataset.page));
 });
 
 document.querySelectorAll("[data-go-page]").forEach((button) => {
-  button.addEventListener("click", () => {
-    showPage(button.dataset.goPage);
-  });
+  button.addEventListener("click", () => showPage(button.dataset.goPage));
 });
 
-document
-  .querySelector("#quickBookingButton")
-  .addEventListener("click", () => {
-    showPage("booking");
-    document.querySelector("#bookingName").focus();
-  });
+document.querySelector("#quickBookingButton").addEventListener("click", () => {
+  showPage("booking");
+  document.querySelector("#bookingName").focus();
+});
 
 prevWeekButton.addEventListener("click", () => {
   visibleWeekStart = addDays(visibleWeekStart, -7);
@@ -293,17 +274,13 @@ bookingDateInput.addEventListener("change", () => {
   if (!bookingDateInput.value) {
     return;
   }
-
-  visibleWeekStart = getStartOfWeek(
-    parseDateString(bookingDateInput.value)
-  );
+  visibleWeekStart = getStartOfWeek(parseDateString(bookingDateInput.value));
   renderBookings();
 });
 
 function updateDutySelectionCount() {
   const checkedCount = dutyCheckboxes.filter((checkbox) => checkbox.checked).length;
   const allChecked = checkedCount === ALL_DUTY_ITEMS.length;
-
   dutySelectionCount.textContent = `已勾选 ${checkedCount}/${ALL_DUTY_ITEMS.length} 项`;
   selectAllDutyButton.textContent = allChecked ? "全部取消" : "全部勾选";
 }
@@ -314,26 +291,19 @@ dutyCheckboxes.forEach((checkbox) => {
 
 selectAllDutyButton.addEventListener("click", () => {
   const shouldCheck = !dutyCheckboxes.every((checkbox) => checkbox.checked);
-
   dutyCheckboxes.forEach((checkbox) => {
     checkbox.checked = shouldCheck;
   });
-
   updateDutySelectionCount();
 });
 
 function hasBookingConflict(newBooking) {
   return bookings.some((existingBooking) => {
-    const sameDate =
-      existingBooking.date === newBooking.date;
-
-    const sameBench =
-      existingBooking.bench === newBooking.bench;
-
+    const sameDate = existingBooking.date === newBooking.date;
+    const sameBench = existingBooking.bench === newBooking.bench;
     const timeOverlap =
       newBooking.startTime < existingBooking.endTime &&
       newBooking.endTime > existingBooking.startTime;
-
     return sameDate && sameBench && timeOverlap;
   });
 }
@@ -348,25 +318,16 @@ bookingForm.addEventListener("submit", (event) => {
     date: bookingDateInput.value,
     startTime: document.querySelector("#startTime").value,
     endTime: document.querySelector("#endTime").value,
-    purpose:
-      document.querySelector("#bookingPurpose").value.trim()
+    purpose: document.querySelector("#bookingPurpose").value.trim()
   };
 
   if (!AVAILABLE_BENCHES.includes(booking.bench)) {
-    showFormMessage(
-      bookingMessage,
-      "请选择可预约的超净台。",
-      "error"
-    );
+    showFormMessage(bookingMessage, "请选择可预约的超净台。", "error");
     return;
   }
 
   if (booking.endTime <= booking.startTime) {
-    showFormMessage(
-      bookingMessage,
-      "结束时间必须晚于开始时间。",
-      "error"
-    );
+    showFormMessage(bookingMessage, "结束时间必须晚于开始时间。", "error");
     return;
   }
 
@@ -381,20 +342,10 @@ bookingForm.addEventListener("submit", (event) => {
 
   bookings.push(booking);
   saveData(BOOKING_STORAGE_KEY, bookings);
-
-  visibleWeekStart = getStartOfWeek(
-    parseDateString(booking.date)
-  );
-
+  visibleWeekStart = getStartOfWeek(parseDateString(booking.date));
   bookingForm.reset();
   bookingDateInput.value = getTodayString();
-
-  showFormMessage(
-    bookingMessage,
-    "预约保存成功，已显示在右侧周预约表中。",
-    "success"
-  );
-
+  showFormMessage(bookingMessage, "预约保存成功，已显示在右侧周预约表中。", "success");
   renderAll();
 });
 
@@ -407,11 +358,7 @@ dutyForm.addEventListener("submit", (event) => {
   const abnormal = document.querySelector("#dutyAbnormal").value.trim();
 
   if (checkedItems.length === 0 && !abnormal) {
-    showFormMessage(
-      dutyMessage,
-      "请至少勾选一项值日内容，或填写异常记录。",
-      "error"
-    );
+    showFormMessage(dutyMessage, "请至少勾选一项值日内容，或填写异常记录。", "error");
     return;
   }
 
@@ -428,24 +375,20 @@ dutyForm.addEventListener("submit", (event) => {
 
   duties.push(duty);
   saveData(DUTY_STORAGE_KEY, duties);
-
   dutyForm.reset();
   dutyDateInput.value = getTodayString();
   updateDutySelectionCount();
-
   showFormMessage(
     dutyMessage,
     `值日记录保存成功，已勾选 ${checkedItems.length}/${ALL_DUTY_ITEMS.length} 项。`,
     "success"
   );
-
   renderAll();
 });
 
 function showFormMessage(element, message, type) {
   element.textContent = message;
   element.className = `form-message ${type}`;
-
   window.setTimeout(() => {
     element.textContent = "";
     element.className = "form-message";
@@ -456,7 +399,6 @@ function sortBookings(data) {
   return [...data].sort((a, b) => {
     const firstDate = `${a.date}T${a.startTime}`;
     const secondDate = `${b.date}T${b.startTime}`;
-
     return firstDate.localeCompare(secondDate);
   });
 }
@@ -464,11 +406,9 @@ function sortBookings(data) {
 function sortDuties(data) {
   return [...data].sort((a, b) => {
     const dateComparison = b.date.localeCompare(a.date);
-
     if (dateComparison !== 0) {
       return dateComparison;
     }
-
     return (b.createdAt || "").localeCompare(a.createdAt || "");
   });
 }
@@ -480,129 +420,167 @@ function getBenchClass(bench) {
 function renderBookings() {
   const weekEnd = addDays(visibleWeekStart, 6);
   const today = getTodayString();
-  const weekdayNames = [
-    "周一",
-    "周二",
-    "周三",
-    "周四",
-    "周五",
-    "周六",
-    "周日"
-  ];
+  const weekdayNames = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
 
-  weekRangeLabel.textContent = formatWeekRange(
-    visibleWeekStart,
-    weekEnd
-  );
+  weekRangeLabel.textContent = formatWeekRange(visibleWeekStart, weekEnd);
 
-  bookingList.innerHTML = Array.from(
-    { length: 7 },
-    (_, index) => {
-      const date = addDays(visibleWeekStart, index);
-      const dateString = dateToString(date);
-      const dayBookings = sortBookings(bookings).filter(
-        (booking) => booking.date === dateString
-      );
-      const isToday = dateString === today;
+  bookingList.innerHTML = Array.from({ length: 7 }, (_, index) => {
+    const date = addDays(visibleWeekStart, index);
+    const dateString = dateToString(date);
+    const dayBookings = sortBookings(bookings).filter(
+      (booking) => booking.date === dateString
+    );
+    const isToday = dateString === today;
 
-      const bookingItems = dayBookings.length
-        ? dayBookings
-            .map((booking) => {
-              const benchClass = getBenchClass(booking.bench);
+    const bookingItems = dayBookings.length
+      ? dayBookings
+          .map((booking) => {
+            const benchClass = getBenchClass(booking.bench);
+            return `
+              <article class="week-booking-item ${benchClass}">
+                <button
+                  type="button"
+                  class="week-delete-button"
+                  data-delete-booking="${booking.id}"
+                  aria-label="删除${escapeHtml(booking.name)}的预约"
+                  title="删除预约"
+                >×</button>
+                <strong class="week-booking-time">
+                  ${escapeHtml(booking.startTime)}–${escapeHtml(booking.endTime)}
+                </strong>
+                <span class="week-booking-name">${escapeHtml(booking.name)}</span>
+                <span class="week-booking-bench">${escapeHtml(booking.bench)}</span>
+                <span class="week-booking-purpose">
+                  ${escapeHtml(booking.purpose || "未填写实验内容")}
+                </span>
+              </article>
+            `;
+          })
+          .join("")
+      : '<p class="week-empty">暂无预约</p>';
 
-              return `
-                <article class="week-booking-item ${benchClass}">
-                  <button
-                    type="button"
-                    class="week-delete-button"
-                    data-delete-booking="${booking.id}"
-                    aria-label="删除${escapeHtml(booking.name)}的预约"
-                    title="删除预约"
-                  >
-                    ×
-                  </button>
-
-                  <strong class="week-booking-time">
-                    ${escapeHtml(booking.startTime)}
-                    –
-                    ${escapeHtml(booking.endTime)}
-                  </strong>
-                  <span class="week-booking-name">
-                    ${escapeHtml(booking.name)}
-                  </span>
-                  <span class="week-booking-bench">
-                    ${escapeHtml(booking.bench)}
-                  </span>
-                  <span class="week-booking-purpose">
-                    ${escapeHtml(booking.purpose || "未填写实验内容")}
-                  </span>
-                </article>
-              `;
-            })
-            .join("")
-        : '<p class="week-empty">暂无预约</p>';
-
-      return `
-        <section class="week-day${isToday ? " today" : ""}">
-          <header class="week-day-header">
-            <div class="week-day-name">
-              <span>${weekdayNames[index]}</span>
-              ${isToday ? '<span class="today-label">今天</span>' : ""}
-            </div>
-            <div class="week-day-date">
-              ${date.getMonth() + 1}月${date.getDate()}日
-            </div>
-          </header>
-
-          <div class="week-day-bookings">
-            ${bookingItems}
+    return `
+      <section class="week-day${isToday ? " today" : ""}">
+        <header class="week-day-header">
+          <div class="week-day-name">
+            <span>${weekdayNames[index]}</span>
+            ${isToday ? '<span class="today-label">今天</span>' : ""}
           </div>
-        </section>
-      `;
-    }
-  ).join("");
+          <div class="week-day-date">${date.getMonth() + 1}月${date.getDate()}日</div>
+        </header>
+        <div class="week-day-bookings">${bookingItems}</div>
+      </section>
+    `;
+  }).join("");
 }
 
 function renderDashboardBookings() {
-  const today = getTodayString();
+  const currentWeekStart = getStartOfWeek(new Date());
+  const currentWeekEnd = addDays(currentWeekStart, 6);
+  const startString = dateToString(currentWeekStart);
+  const endString = dateToString(currentWeekEnd);
+  const weekBookings = sortBookings(bookings).filter(
+    (booking) => booking.date >= startString && booking.date <= endString
+  );
 
-  const upcomingBookings = sortBookings(bookings)
-    .filter((booking) => booking.date >= today)
-    .slice(0, 5);
+  dashboardWeekRange.textContent = formatWeekRange(currentWeekStart, currentWeekEnd);
 
-  if (upcomingBookings.length === 0) {
-    dashboardBookingList.innerHTML = createEmptyState(
-      "暂无近期预约",
-      "点击“新建预约”添加第一条超净台预约。"
+  if (weekBookings.length === 0) {
+    dashboardBookingList.innerHTML = createDashboardEmptyState(
+      "本周暂无预约",
+      "点击右上方“超净台预约”添加记录。"
     );
     return;
   }
 
-  dashboardBookingList.innerHTML = upcomingBookings
+  dashboardBookingList.innerHTML = weekBookings
+    .slice(0, 6)
     .map((booking) => {
+      const benchClass = getBenchClass(booking.bench);
       return `
-        <article class="record-item">
-          <div class="record-main">
-            <div class="record-title">
-              <strong>${escapeHtml(booking.name)}</strong>
-              <span class="badge">
-                ${escapeHtml(booking.bench)}
-              </span>
-            </div>
-
-            <div class="record-details">
-              ${formatDate(booking.date)}
-              ${escapeHtml(booking.startTime)}
-              –
-              ${escapeHtml(booking.endTime)}
-              ·
-              ${escapeHtml(booking.purpose || "未填写实验内容")}
-            </div>
+        <div class="dashboard-summary-item">
+          <div class="summary-date-block">
+            <strong>${parseDateString(booking.date).getDate()}</strong>
+            <span>${parseDateString(booking.date).getMonth() + 1}月</span>
           </div>
-        </article>
+          <div class="summary-item-main">
+            <div class="summary-item-title">
+              <strong>${escapeHtml(booking.name)}</strong>
+              <span class="summary-bench-badge ${benchClass}">${escapeHtml(booking.bench)}</span>
+            </div>
+            <p>${formatShortDate(booking.date)} · ${escapeHtml(booking.startTime)}–${escapeHtml(booking.endTime)}</p>
+          </div>
+        </div>
       `;
     })
     .join("");
+
+  if (weekBookings.length > 6) {
+    dashboardBookingList.insertAdjacentHTML(
+      "beforeend",
+      `<p class="summary-more-text">另有 ${weekBookings.length - 6} 条预约，请进入预约页面查看。</p>`
+    );
+  }
+}
+
+function renderDashboardDuties() {
+  const currentWeekStart = getStartOfWeek(new Date());
+  const currentWeekEnd = addDays(currentWeekStart, 6);
+  const startString = dateToString(currentWeekStart);
+  const endString = dateToString(currentWeekEnd);
+  const weekDuties = sortDuties(duties).filter(
+    (duty) => duty.date >= startString && duty.date <= endString
+  );
+
+  if (weekDuties.length === 0) {
+    dashboardDutyList.innerHTML = createDashboardEmptyState(
+      "本周暂无值日记录",
+      "点击右上方“值日排班”填写检查记录。"
+    );
+    return;
+  }
+
+  dashboardDutyList.innerHTML = weekDuties
+    .slice(0, 6)
+    .map((duty) => {
+      const checkedCount = (duty.checkedItems || []).length;
+      const hasLegacyContent = Boolean(duty.legacyTask || duty.legacyNote);
+      const isComplete = checkedCount === ALL_DUTY_ITEMS.length;
+      const hasAbnormal = Boolean(duty.abnormal);
+      const progressText = hasLegacyContent
+        ? "旧版记录"
+        : `${checkedCount}/${ALL_DUTY_ITEMS.length} 项`;
+      const progressClass = hasLegacyContent
+        ? "legacy"
+        : isComplete
+          ? "complete"
+          : "partial";
+
+      return `
+        <div class="dashboard-summary-item">
+          <div class="summary-date-block duty-date-block">
+            <strong>${parseDateString(duty.date).getDate()}</strong>
+            <span>${parseDateString(duty.date).getMonth() + 1}月</span>
+          </div>
+          <div class="summary-item-main">
+            <div class="summary-item-title">
+              <strong>${escapeHtml(duty.name)}</strong>
+              <span class="summary-duty-badge ${progressClass}">${progressText}</span>
+              ${hasAbnormal ? '<span class="summary-duty-badge abnormal">有异常</span>' : ""}
+            </div>
+            <p>${formatShortDate(duty.date)} · ${hasAbnormal ? "已记录异常" : "无异常记录"}</p>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+
+  if (weekDuties.length > 6) {
+    dashboardDutyList.insertAdjacentHTML(
+      "beforeend",
+      `<p class="summary-more-text">另有 ${weekDuties.length - 6} 条值日记录，请进入值日页面查看。</p>`
+    );
+  }
 }
 
 function renderDutyChecklist(duty) {
@@ -612,7 +590,6 @@ function renderDutyChecklist(duty) {
     const items = group.items
       .map((item) => {
         const isChecked = selectedItems.has(item);
-
         return `
           <li class="duty-record-check ${isChecked ? "checked" : "unchecked"}">
             <span class="duty-record-check-icon">${isChecked ? "✓" : "—"}</span>
@@ -668,9 +645,7 @@ function renderDuties() {
         : `
           <details class="duty-record-details">
             <summary>查看完整检查清单</summary>
-            <div class="duty-record-checklist">
-              ${renderDutyChecklist(duty)}
-            </div>
+            <div class="duty-record-checklist">${renderDutyChecklist(duty)}</div>
           </details>
         `;
 
@@ -679,29 +654,18 @@ function renderDuties() {
           <div class="record-main duty-record-main">
             <div class="record-title duty-record-title">
               <strong>${escapeHtml(duty.name)}</strong>
-              <span class="duty-status-badge ${statusClass}">
-                ${statusText}
-              </span>
+              <span class="duty-status-badge ${statusClass}">${statusText}</span>
               ${hasAbnormal ? '<span class="duty-status-badge abnormal">有异常</span>' : ""}
             </div>
-
             <div class="record-details duty-record-summary">
               <div>${formatDate(duty.date)}</div>
               <div class="duty-abnormal-record${hasAbnormal ? " has-abnormal" : ""}">
-                <strong>异常记录：</strong>
-                ${escapeHtml(duty.abnormal || "无")}
+                <strong>异常记录：</strong>${escapeHtml(duty.abnormal || "无")}
               </div>
             </div>
-
             ${legacyMarkup}
           </div>
-
-          <button
-            class="delete-button"
-            data-delete-duty="${duty.id}"
-          >
-            删除
-          </button>
+          <button class="delete-button" data-delete-duty="${duty.id}">删除</button>
         </article>
       `;
     })
@@ -710,19 +674,10 @@ function renderDuties() {
 
 function renderStatistics() {
   const today = getTodayString();
-
-  const todayBookingCount = bookings.filter(
-    (booking) => booking.date === today
-  ).length;
-
-  document.querySelector("#todayBookingCount").textContent =
-    todayBookingCount;
-
-  document.querySelector("#totalBookingCount").textContent =
-    bookings.length;
-
-  document.querySelector("#totalDutyCount").textContent =
-    duties.length;
+  const todayBookingCount = bookings.filter((booking) => booking.date === today).length;
+  document.querySelector("#todayBookingCount").textContent = todayBookingCount;
+  document.querySelector("#totalBookingCount").textContent = bookings.length;
+  document.querySelector("#totalDutyCount").textContent = duties.length;
 }
 
 function createEmptyState(title, description) {
@@ -734,50 +689,42 @@ function createEmptyState(title, description) {
   `;
 }
 
+function createDashboardEmptyState(title, description) {
+  return `
+    <div class="dashboard-empty-state">
+      <span class="dashboard-empty-icon">—</span>
+      <strong>${title}</strong>
+      <p>${description}</p>
+    </div>
+  `;
+}
+
 bookingList.addEventListener("click", (event) => {
   const button = event.target.closest("[data-delete-booking]");
-
   if (!button) {
     return;
   }
 
-  const bookingId = button.dataset.deleteBooking;
-
-  const shouldDelete = window.confirm(
-    "确定删除这条预约记录吗？"
-  );
-
-  if (!shouldDelete) {
+  if (!window.confirm("确定删除这条预约记录吗？")) {
     return;
   }
 
-  bookings = bookings.filter(
-    (booking) => booking.id !== bookingId
-  );
-
+  bookings = bookings.filter((booking) => booking.id !== button.dataset.deleteBooking);
   saveData(BOOKING_STORAGE_KEY, bookings);
   renderAll();
 });
 
 dutyList.addEventListener("click", (event) => {
   const button = event.target.closest("[data-delete-duty]");
-
   if (!button) {
     return;
   }
 
-  const dutyId = button.dataset.deleteDuty;
-
-  const shouldDelete = window.confirm(
-    "确定删除这条值日安排吗？"
-  );
-
-  if (!shouldDelete) {
+  if (!window.confirm("确定删除这条值日安排吗？")) {
     return;
   }
 
-  duties = duties.filter((duty) => duty.id !== dutyId);
-
+  duties = duties.filter((duty) => duty.id !== button.dataset.deleteDuty);
   saveData(DUTY_STORAGE_KEY, duties);
   renderAll();
 });
@@ -785,6 +732,7 @@ dutyList.addEventListener("click", (event) => {
 function renderAll() {
   renderBookings();
   renderDashboardBookings();
+  renderDashboardDuties();
   renderDuties();
   renderStatistics();
 }
@@ -792,5 +740,4 @@ function renderAll() {
 bookingDateInput.value = getTodayString();
 dutyDateInput.value = getTodayString();
 updateDutySelectionCount();
-
 renderAll();
