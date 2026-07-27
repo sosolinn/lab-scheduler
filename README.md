@@ -1,19 +1,40 @@
 # LabScheduler
 
-实验室超净台预约与值日管理系统，现已迁移为 Next.js App Router 项目。
+实验室超净台预约与值日管理系统，基于 Next.js App Router。预约记录已接入 Supabase PostgreSQL，值日记录暂时继续保存在浏览器 localStorage 中。
 
-## 当前迁移策略
-
-为确保现有 UI、交互逻辑以及浏览器中的历史数据完全兼容，Next.js 会在构建时读取原有 `index.html`、`style.css` 和 `script.js`：
+## 项目结构
 
 - `app/layout.js`：Next.js 根布局与全局样式入口
 - `app/page.js`：读取并渲染原页面结构
-- `app/LegacyScriptRunner.js`：在客户端加载原有业务逻辑
-- `index.html`：保留的原页面结构源文件
-- `style.css`：保留的原样式文件
-- `script.js`：保留的预约、值日和 localStorage 逻辑
+- `app/LegacyScriptRunner.js`：启动页面逻辑并在启动前加载数据库预约
+- `app/api/bookings/route.js`：预约记录的读取、新增和删除 API
+- `lib/database.js`：服务器端 PostgreSQL 连接
+- `database-bridge.js`：在不改变现有 UI 的前提下同步预约数据
+- `supabase/migrations/001_create_lab_bookings.sql`：预约表 SQL 结构
+- `index.html`、`style.css`、`script.js`：保留的页面结构、样式和原有交互逻辑
 
-原有 localStorage 键名未修改，因此升级前保存的预约和值日记录仍可继续使用。
+## 配置 Supabase
+
+复制环境变量示例：
+
+```bash
+cp .env.example .env.local
+```
+
+在 `.env.local` 中填写 Supabase 提供的连接地址：
+
+```env
+DATABASE_URL="你的 Supabase Transaction pooler URL"
+DIRECT_URL="你的 Supabase Direct connection URL"
+```
+
+网站运行时只使用 `DATABASE_URL`。真实数据库地址只能放在本地 `.env.local` 或 Vercel 等部署平台的环境变量中，不要提交到 GitHub。
+
+预约 API 第一次运行时会自动创建 `lab_bookings` 表。也可以在 Supabase SQL Editor 中手动执行：
+
+```text
+supabase/migrations/001_create_lab_bookings.sql
+```
 
 ## 本地运行
 
@@ -22,15 +43,15 @@ npm install
 npm run dev
 ```
 
-浏览器打开 `http://localhost:3000`。
+浏览器打开 `http://localhost:3000`。首次加载时，网站会尝试把当前浏览器中原有的预约记录迁移到数据库；遇到与数据库现有预约冲突的本地记录时，以数据库记录为准。
 
-## 构建与预览
+## 构建与运行
 
 ```bash
 npm run build
 npm run start
 ```
 
-构建结果输出到 `out` 目录，可部署到 GitHub Pages、Vercel 或其他静态托管平台。
+由于预约功能使用服务端 API 和数据库连接，本项目不能再作为纯静态站点部署到 GitHub Pages。推荐部署到 Vercel、支持 Node.js 的服务器或其他能够运行 Next.js 服务端功能的平台，并在部署平台配置 `DATABASE_URL`。
 
 每次推送或提交 Pull Request 时，GitHub Actions 会自动安装依赖并执行 Next.js 构建检查。
