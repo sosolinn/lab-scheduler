@@ -36,6 +36,13 @@ function applyDisplayTextReplacements(markup) {
   );
 }
 
+function applyScriptTextReplacements(scriptSource) {
+  return scriptSource.replaceAll(
+    "完成左侧检查并保存后，记录会显示在这里。",
+    "完成检查并保存后，记录会显示在这里。"
+  );
+}
+
 function getLegacyMarkup() {
   const html = readProjectFile("index.html");
   const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
@@ -56,7 +63,9 @@ export default function HomePage() {
   const markup = getLegacyMarkup();
   const legacyScript = readProjectFile("script.js");
   const databaseBridge = readProjectFile("database-bridge.js");
-  const scriptSource = `${legacyScript}\n\n${databaseBridge}`;
+  const scriptSource = applyScriptTextReplacements(
+    `${legacyScript}\n\n${databaseBridge}`
+  );
 
   return (
     <>
