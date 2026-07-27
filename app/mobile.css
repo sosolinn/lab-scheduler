@@ -1,0 +1,184 @@
+@media (max-width: 720px) {
+  .sidebar {
+    padding: 16px 14px 12px;
+  }
+
+  .brand {
+    padding: 0 4px 14px;
+  }
+
+  .nav-menu {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    overflow: visible;
+  }
+
+  .nav-item {
+    min-width: 0;
+    min-height: 46px;
+    justify-content: center;
+    gap: 4px;
+    padding: 9px 3px;
+    font-size: 12px;
+    line-height: 1.2;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .nav-item span {
+    width: 15px;
+    flex: 0 0 15px;
+    font-size: 14px;
+  }
+
+  .weekly-booking-card {
+    padding: 18px;
+  }
+
+  .weekly-heading {
+    align-items: flex-start;
+    flex-direction: row;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .weekly-heading > div:first-child {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .week-navigation {
+    width: auto;
+    flex: 0 0 auto;
+    justify-content: flex-end;
+    gap: 5px;
+  }
+
+  .week-nav-button,
+  .week-today-button {
+    height: 32px;
+  }
+
+  .week-nav-button {
+    width: 32px;
+  }
+
+  .week-today-button {
+    padding: 0 10px;
+  }
+
+  .bench-legend {
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .legend-item {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  .week-calendar-scroll {
+    overflow: visible;
+    padding-bottom: 0;
+  }
+
+  .week-calendar {
+    min-width: 0;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .week-day {
+    min-height: 0;
+    border-radius: 10px;
+  }
+
+  .week-day-header {
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .week-day-name {
+    min-width: 0;
+    justify-content: flex-start;
+  }
+
+  .week-day-date {
+    flex-shrink: 0;
+    margin-top: 0;
+    font-size: 15px;
+  }
+
+  .week-day-bookings {
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .week-empty {
+    padding: 10px 8px;
+  }
+
+  .week-booking-item {
+    padding: 9px 10px;
+  }
+
+  .week-booking-time {
+    margin-bottom: 4px;
+  }
+
+  .week-booking-name {
+    margin-bottom: 4px;
+  }
+
+  .week-booking-purpose {
+    margin-top: 4px;
+  }
+}
+
+@media (max-width: 360px) {
+  .sidebar {
+    padding-inline: 10px;
+  }
+
+  .nav-menu {
+    gap: 4px;
+  }
+
+  .nav-item {
+    gap: 3px;
+    padding-inline: 2px;
+    font-size: 11px;
+  }
+
+  .nav-item span {
+    width: 13px;
+    flex-basis: 13px;
+    font-size: 13px;
+  }
+
+  .weekly-booking-card {
+    padding: 15px;
+  }
+
+  .weekly-heading {
+    gap: 8px;
+  }
+
+  .week-nav-button,
+  .week-today-button {
+    height: 30px;
+  }
+
+  .week-nav-button {
+    width: 30px;
+  }
+
+  .week-today-button {
+    padding: 0 8px;
+  }
+}

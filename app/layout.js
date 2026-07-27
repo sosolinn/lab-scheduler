@@ -1,4 +1,5 @@
 import "../style.css";
+import "./mobile.css";
 
 export const metadata = {
   title: "LabScheduler 实验室预约系统",
