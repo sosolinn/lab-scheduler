@@ -32,3 +32,5 @@ npm run start
 ```
 
 构建结果输出到 `out` 目录，可部署到 GitHub Pages、Vercel 或其他静态托管平台。
+
+每次推送或提交 Pull Request 时，GitHub Actions 会自动安装依赖并执行 Next.js 构建检查。
