@@ -25,7 +25,9 @@ function getLegacyMarkup() {
 
 export default function HomePage() {
   const markup = getLegacyMarkup();
-  const scriptSource = readProjectFile("script.js");
+  const legacyScript = readProjectFile("script.js");
+  const databaseBridge = readProjectFile("database-bridge.js");
+  const scriptSource = `${legacyScript}\n\n${databaseBridge}`;
 
   return (
     <>
