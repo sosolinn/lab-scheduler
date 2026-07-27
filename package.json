@@ -1,18 +1,16 @@
 {
   "name": "lab-scheduler",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "serve out"
+    "start": "next start"
   },
   "dependencies": {
     "next": "16.2.11",
+    "postgres": "^3.4.7",
     "react": "19.2.7",
     "react-dom": "19.2.7"
-  },
-  "devDependencies": {
-    "serve": "14.2.6"
   }
 }
