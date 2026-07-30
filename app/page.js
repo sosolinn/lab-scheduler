@@ -110,8 +110,9 @@ export default function HomePage() {
   const legacyScript = readProjectFile("script.js");
   const databaseBridge = readProjectFile("database-bridge.js");
   const dutyPeopleScript = readProjectFile("duty-people.js");
+  const bookingPeopleScript = readProjectFile("booking-people.js");
   const scriptSource = applyScriptTextReplacements(
-    `${legacyScript}\n\n${databaseBridge}\n\n${dutyPeopleScript}`
+    `${legacyScript}\n\n${databaseBridge}\n\n${dutyPeopleScript}\n\n${bookingPeopleScript}`
   );
 
   return (
