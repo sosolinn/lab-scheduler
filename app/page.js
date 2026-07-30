@@ -92,8 +92,9 @@ export default function HomePage() {
   const markup = getLegacyMarkup();
   const legacyScript = readProjectFile("script.js");
   const databaseBridge = readProjectFile("database-bridge.js");
+  const dutyPeopleScript = readProjectFile("duty-people.js");
   const scriptSource = applyScriptTextReplacements(
-    `${legacyScript}\n\n${databaseBridge}`
+    `${legacyScript}\n\n${databaseBridge}\n\n${dutyPeopleScript}`
   );
 
   return (
