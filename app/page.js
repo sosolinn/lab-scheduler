@@ -5,8 +5,35 @@ import LegacyScriptRunner from "./LegacyScriptRunner";
 
 export const dynamic = "force-static";
 
+const CO2_CYLINDER_CHECK_TEXT = "CO₂钢瓶气体充足";
+
 function readProjectFile(filename) {
   return fs.readFileSync(path.join(process.cwd(), filename), "utf8");
+}
+
+function ensureCo2CylinderMarkup(markup) {
+  let result = markup.replaceAll("已勾选 0/15 项", "已勾选 0/16 项");
+
+  if (result.includes(`value="${CO2_CYLINDER_CHECK_TEXT}"`)) {
+    return result;
+  }
+
+  const temperatureOptionPattern = /(<label class="duty-check-option">\s*<input[^>]*value="温度、CO₂浓度正常，无报警"[^>]*>\s*<span>温度、CO₂浓度正常，无报警<\/span>\s*<\/label>)/;
+  const lineBreak = result.includes("\r\n") ? "\r\n" : "\n";
+  const indentation = "                  ";
+  const cylinderOption = [
+    '<label class="duty-check-option">',
+    `  <input type="checkbox" class="duty-check-input" name="dutyCheck" value="${CO2_CYLINDER_CHECK_TEXT}">`,
+    `  <span>${CO2_CYLINDER_CHECK_TEXT}</span>`,
+    "</label>"
+  ]
+    .map((line, index) => `${index === 0 ? "" : indentation}${line}`)
+    .join(lineBreak);
+
+  return result.replace(
+    temperatureOptionPattern,
+    `$1${lineBreak}${indentation}${cylinderOption}`
+  );
 }
 
 function applyDisplayTextReplacements(markup) {
@@ -27,49 +54,38 @@ function applyDisplayTextReplacements(markup) {
       '<label for="dutyName">值日人</label>'
     ],
     ["请输入值班人姓名", "请输入值日人姓名"],
-    ["查看值班人员、完成情况和异常记录", "查看值日人员、完成情况和异常记录"],
-    ["已勾选 0/15 项", "已勾选 0/16 项"],
-    [
-      `                  <label class="duty-check-option">
-                    <input type="checkbox" class="duty-check-input" name="dutyCheck" value="温度、CO₂浓度正常，无报警">
-                    <span>温度、CO₂浓度正常，无报警</span>
-                  </label>`,
-      `                  <label class="duty-check-option">
-                    <input type="checkbox" class="duty-check-input" name="dutyCheck" value="温度、CO₂浓度正常，无报警">
-                    <span>温度、CO₂浓度正常，无报警</span>
-                  </label>
-                  <label class="duty-check-option">
-                    <input type="checkbox" class="duty-check-input" name="dutyCheck" value="CO₂钢瓶气体充足">
-                    <span>CO₂钢瓶气体充足</span>
-                  </label>`
-    ]
+    ["查看值班人员、完成情况和异常记录", "查看值日人员、完成情况和异常记录"]
   ];
 
-  return replacements.reduce(
+  const replacedMarkup = replacements.reduce(
     (result, [source, replacement]) => result.replaceAll(source, replacement),
     markup
+  );
+
+  return ensureCo2CylinderMarkup(replacedMarkup);
+}
+
+function ensureCo2CylinderScript(scriptSource) {
+  if (scriptSource.includes(`"${CO2_CYLINDER_CHECK_TEXT}"`)) {
+    return scriptSource;
+  }
+
+  const checklistPattern = /("温度、CO₂浓度正常，无报警",)(\r?\n)(\s*)"培养箱门关闭严密",/;
+
+  return scriptSource.replace(
+    checklistPattern,
+    (match, temperatureItem, lineBreak, indentation) =>
+      `${temperatureItem}${lineBreak}${indentation}"${CO2_CYLINDER_CHECK_TEXT}",${lineBreak}${indentation}"培养箱门关闭严密",`
   );
 }
 
 function applyScriptTextReplacements(scriptSource) {
-  const replacements = [
-    [
-      "完成左侧检查并保存后，记录会显示在这里。",
-      "完成检查并保存后，记录会显示在这里。"
-    ],
-    [
-      `      "温度、CO₂浓度正常，无报警",
-      "培养箱门关闭严密",`,
-      `      "温度、CO₂浓度正常，无报警",
-      "CO₂钢瓶气体充足",
-      "培养箱门关闭严密",`
-    ]
-  ];
-
-  return replacements.reduce(
-    (result, [source, replacement]) => result.replaceAll(source, replacement),
-    scriptSource
+  const replacedScript = scriptSource.replaceAll(
+    "完成左侧检查并保存后，记录会显示在这里。",
+    "完成检查并保存后，记录会显示在这里。"
   );
+
+  return ensureCo2CylinderScript(replacedScript);
 }
 
 function getLegacyMarkup() {
