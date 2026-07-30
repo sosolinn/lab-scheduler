@@ -27,7 +27,22 @@ function applyDisplayTextReplacements(markup) {
       '<label for="dutyName">值日人</label>'
     ],
     ["请输入值班人姓名", "请输入值日人姓名"],
-    ["查看值班人员、完成情况和异常记录", "查看值日人员、完成情况和异常记录"]
+    ["查看值班人员、完成情况和异常记录", "查看值日人员、完成情况和异常记录"],
+    ["已勾选 0/15 项", "已勾选 0/16 项"],
+    [
+      `                  <label class="duty-check-option">
+                    <input type="checkbox" class="duty-check-input" name="dutyCheck" value="温度、CO₂浓度正常，无报警">
+                    <span>温度、CO₂浓度正常，无报警</span>
+                  </label>`,
+      `                  <label class="duty-check-option">
+                    <input type="checkbox" class="duty-check-input" name="dutyCheck" value="温度、CO₂浓度正常，无报警">
+                    <span>温度、CO₂浓度正常，无报警</span>
+                  </label>
+                  <label class="duty-check-option">
+                    <input type="checkbox" class="duty-check-input" name="dutyCheck" value="CO₂钢瓶气体充足">
+                    <span>CO₂钢瓶气体充足</span>
+                  </label>`
+    ]
   ];
 
   return replacements.reduce(
@@ -37,9 +52,23 @@ function applyDisplayTextReplacements(markup) {
 }
 
 function applyScriptTextReplacements(scriptSource) {
-  return scriptSource.replaceAll(
-    "完成左侧检查并保存后，记录会显示在这里。",
-    "完成检查并保存后，记录会显示在这里。"
+  const replacements = [
+    [
+      "完成左侧检查并保存后，记录会显示在这里。",
+      "完成检查并保存后，记录会显示在这里。"
+    ],
+    [
+      `      "温度、CO₂浓度正常，无报警",
+      "培养箱门关闭严密",`,
+      `      "温度、CO₂浓度正常，无报警",
+      "CO₂钢瓶气体充足",
+      "培养箱门关闭严密",`
+    ]
+  ];
+
+  return replacements.reduce(
+    (result, [source, replacement]) => result.replaceAll(source, replacement),
+    scriptSource
   );
 }
 
