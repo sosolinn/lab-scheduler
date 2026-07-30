@@ -37,6 +37,11 @@ async function __labRefreshBookingsFromDatabase() {
   __labSyncedBookings = databaseBookings.map((booking) => ({ ...booking }));
   __labOriginalSaveData(BOOKING_STORAGE_KEY, databaseBookings);
   renderAll();
+  window.dispatchEvent(
+    new CustomEvent("lab:bookings-refreshed", {
+      detail: { bookings: databaseBookings }
+    })
+  );
 }
 
 async function __labCreateDatabaseBooking(booking) {
@@ -126,6 +131,11 @@ function __labQueueDatabaseRefresh() {
     .then(() => __labRefreshBookingsFromDatabase())
     .catch((error) => {
       console.error("刷新预约数据库失败：", error);
+      showFormMessage(
+        bookingMessage,
+        error.message || "无法连接预约数据库，请检查 DATABASE_URL。",
+        "error"
+      );
     });
 }
 
@@ -136,3 +146,5 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 window.setInterval(__labQueueDatabaseRefresh, 30000);
+
+__labQueueDatabaseRefresh();
