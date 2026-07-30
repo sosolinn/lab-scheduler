@@ -42,6 +42,7 @@ function applyDisplayTextReplacements(markup) {
       '<div class="brand-icon">L</div>',
       '<div class="brand-icon"><img src="/camel-dna-logo.svg" alt="楷模实验室双峰骆驼与 DNA 标志"></div>'
     ],
+    ['<p class="eyebrow">实验室公共设备管理</p>', ""],
     ["<h1>LabScheduler</h1>", "<h1>楷模实验室</h1>"],
     ["<p>LabScheduler v1.3</p>", "<p>楷模实验室 v1.3</p>"],
     ["值班人员、完成进度与异常情况", "值日人员、完成进度与异常情况"],
