@@ -1,4 +1,5 @@
 const DUTY_PEOPLE_STORAGE_KEY = "labSchedulerDutyPeople";
+const DUTY_PEOPLE_DELETED_STORAGE_KEY = "labSchedulerDeletedDutyPeople";
 
 const __dutyNameInput = document.querySelector("#dutyName");
 const __dutyNameLabel = document.querySelector('label[for="dutyName"]');
@@ -7,6 +8,10 @@ function __normalizeDutyPersonName(value) {
   return String(value || "")
     .trim()
     .replace(/\s+/g, " ");
+}
+
+function __dutyPersonComparisonKey(value) {
+  return __normalizeDutyPersonName(value).toLocaleLowerCase("zh-CN");
 }
 
 function __extractDutyPersonNames(duty) {
@@ -25,7 +30,7 @@ function __uniqueDutyPersonNames(names) {
 
   return names.filter((name) => {
     const normalizedName = __normalizeDutyPersonName(name);
-    const comparisonKey = normalizedName.toLocaleLowerCase("zh-CN");
+    const comparisonKey = __dutyPersonComparisonKey(normalizedName);
 
     if (!normalizedName || seen.has(comparisonKey)) {
       return false;
@@ -38,14 +43,22 @@ function __uniqueDutyPersonNames(names) {
 
 if (__dutyNameInput) {
   const storedDutyPeople = loadData(DUTY_PEOPLE_STORAGE_KEY);
+  const storedDeletedDutyPeople = loadData(DUTY_PEOPLE_DELETED_STORAGE_KEY);
   const historicalDutyPeople = Array.isArray(duties)
     ? duties.flatMap(__extractDutyPersonNames)
     : [];
+  const __deletedDutyPeople = new Set(
+    (Array.isArray(storedDeletedDutyPeople) ? storedDeletedDutyPeople : [])
+      .map(__dutyPersonComparisonKey)
+      .filter(Boolean)
+  );
 
   let __availableDutyPeople = __uniqueDutyPersonNames([
     ...(Array.isArray(storedDutyPeople) ? storedDutyPeople : []),
-    ...historicalDutyPeople
-  ]);
+    ...historicalDutyPeople.filter(
+      (name) => !__deletedDutyPeople.has(__dutyPersonComparisonKey(name))
+    )
+  ]).filter((name) => !__deletedDutyPeople.has(__dutyPersonComparisonKey(name)));
   const __selectedDutyPeople = new Set();
 
   __dutyNameInput.type = "hidden";
@@ -88,6 +101,7 @@ if (__dutyNameInput) {
 
   function __saveDutyPeople() {
     saveData(DUTY_PEOPLE_STORAGE_KEY, __availableDutyPeople);
+    saveData(DUTY_PEOPLE_DELETED_STORAGE_KEY, Array.from(__deletedDutyPeople));
   }
 
   function __syncSelectedDutyPeople() {
@@ -132,9 +146,9 @@ if (__dutyNameInput) {
   }
 
   function __findDutyPersonName(rawName) {
-    const normalizedName = __normalizeDutyPersonName(rawName);
+    const comparisonKey = __dutyPersonComparisonKey(rawName);
     return __availableDutyPeople.find(
-      (name) => name.toLocaleLowerCase("zh-CN") === normalizedName.toLocaleLowerCase("zh-CN")
+      (name) => __dutyPersonComparisonKey(name) === comparisonKey
     );
   }
 
@@ -157,6 +171,7 @@ if (__dutyNameInput) {
       return;
     }
 
+    __deletedDutyPeople.delete(__dutyPersonComparisonKey(newName));
     __availableDutyPeople.push(newName);
     __selectedDutyPeople.add(newName);
     __saveDutyPeople();
@@ -175,6 +190,7 @@ if (__dutyNameInput) {
         return;
       }
 
+      __deletedDutyPeople.add(__dutyPersonComparisonKey(name));
       __availableDutyPeople = __availableDutyPeople.filter((person) => person !== name);
       __selectedDutyPeople.delete(name);
       __saveDutyPeople();
