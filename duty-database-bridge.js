@@ -47,24 +47,23 @@ async function __labCreateDatabaseDuty(duty) {
       await __labReadDutyResponseError(response, "值日记录保存失败。")
     );
   }
+
+  const payload = await response.json();
+  return payload.duty || null;
 }
 
-async function __labDeleteDatabaseDuty(id) {
-  const response = await fetch(
-    `${__LAB_DUTIES_API_ENDPOINT}?id=${encodeURIComponent(id)}`,
-    {
-      method: "DELETE",
-      headers: {
-        Accept: "application/json"
-      }
-    }
-  );
-
-  if (!response.ok && response.status !== 404) {
-    throw new Error(
-      await __labReadDutyResponseError(response, "值日记录删除失败。")
-    );
-  }
+function __labDutySignature(duty) {
+  return JSON.stringify({
+    id: duty?.id || "",
+    name: duty?.name || "",
+    names: Array.isArray(duty?.names) ? duty.names : [],
+    date: duty?.date || "",
+    checkedItems: Array.isArray(duty?.checkedItems) ? duty.checkedItems : [],
+    abnormal: duty?.abnormal || "",
+    legacyTask: duty?.legacyTask || "",
+    legacyNote: duty?.legacyNote || "",
+    submittedAt: duty?.submittedAt || ""
+  });
 }
 
 async function __labRefreshDutiesFromDatabase({ migrateLocal = false } = {}) {
@@ -76,10 +75,20 @@ async function __labRefreshDutiesFromDatabase({ migrateLocal = false } = {}) {
     databaseDuties.length === 0 &&
     __labSyncedDuties.length > 0
   ) {
-    for (const duty of __labSyncedDuties) {
-      await __labCreateDatabaseDuty(duty);
+    const today = getTodayString();
+    const todayDuties = __labSyncedDuties
+      .filter((duty) => duty.date === today)
+      .sort((a, b) =>
+        (a.submittedAt || a.createdAt || "").localeCompare(
+          b.submittedAt || b.createdAt || ""
+        )
+      );
+    const latestTodayDuty = todayDuties.at(-1);
+
+    if (latestTodayDuty) {
+      await __labCreateDatabaseDuty(latestTodayDuty);
+      databaseDuties = await __labFetchDatabaseDuties();
     }
-    databaseDuties = await __labFetchDatabaseDuties();
   }
 
   localStorage.setItem(__LAB_DUTIES_MIGRATION_KEY, "1");
@@ -94,13 +103,9 @@ async function __labRefreshDutiesFromDatabase({ migrateLocal = false } = {}) {
   );
 }
 
-async function __labApplyDutyChanges(addedDuties, removedDuties) {
-  for (const duty of addedDuties) {
+async function __labApplyDutyChanges(changedDuties) {
+  for (const duty of changedDuties) {
     await __labCreateDatabaseDuty(duty);
-  }
-
-  for (const duty of removedDuties) {
-    await __labDeleteDatabaseDuty(duty.id);
   }
 
   await __labRefreshDutiesFromDatabase();
@@ -114,20 +119,22 @@ saveData = function saveDataWithDutyDatabaseSync(key, data) {
   }
 
   const nextDuties = normalizeDuties(data).map((duty) => ({ ...duty }));
-  const previousDuties = __labSyncedDuties;
-  const previousIds = new Set(previousDuties.map((duty) => duty.id));
-  const nextIds = new Set(nextDuties.map((duty) => duty.id));
-  const addedDuties = nextDuties.filter((duty) => !previousIds.has(duty.id));
-  const removedDuties = previousDuties.filter((duty) => !nextIds.has(duty.id));
+  const previousByDate = new Map(
+    __labSyncedDuties.map((duty) => [duty.date, duty])
+  );
+  const changedDuties = nextDuties.filter((duty) => {
+    const previousDuty = previousByDate.get(duty.date);
+    return __labDutySignature(previousDuty) !== __labDutySignature(duty);
+  });
 
   __labSyncedDuties = nextDuties;
 
-  if (addedDuties.length === 0 && removedDuties.length === 0) {
+  if (changedDuties.length === 0) {
     return;
   }
 
   __labDutySyncQueue = __labDutySyncQueue
-    .then(() => __labApplyDutyChanges(addedDuties, removedDuties))
+    .then(() => __labApplyDutyChanges(changedDuties))
     .catch(async (error) => {
       console.error("同步值日数据库失败：", error);
 
