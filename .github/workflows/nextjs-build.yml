@@ -27,12 +27,15 @@ jobs:
       - name: Validate browser scripts
         run: |
           node --check script.js
+          node --check auth.js
           node --check database-bridge.js
           node --check duty-database-bridge.js
           node --check people-picker.js
+          node --check people-picker-control.js
           node --check booking-people.js
           node --check duty-people.js
           node --check duty-rules.js
+          node --check booking-auth-rules.js
 
       - name: Build Next.js application
         run: npm run build
