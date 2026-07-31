@@ -102,6 +102,7 @@
 }
 
 .duty-person-add-button {
+  order: 2;
   border: 1px solid #bfdbfe;
   color: var(--primary);
   background: var(--primary-light);
@@ -113,6 +114,7 @@
 }
 
 .duty-person-delete-button {
+  order: 1;
   border: 1px solid #fecaca;
   color: var(--danger);
   background: var(--danger-bg);
