@@ -81,9 +81,25 @@ function ensureCo2CylinderScript(scriptSource) {
 }
 
 function applyScriptTextReplacements(scriptSource) {
-  const replacedScript = scriptSource.replaceAll(
-    "完成左侧检查并保存后，记录会显示在这里。",
-    "完成检查并保存后，记录会显示在这里。"
+  const replacements = [
+    [
+      "完成左侧检查并保存后，记录会显示在这里。",
+      "完成检查并保存后，记录会显示在这里。"
+    ],
+    [
+      '<span class="auth-dialog-logo">楷</span>',
+      '<span class="auth-dialog-logo"><img src="/camel-dna-logo.svg" alt="楷模实验室双峰骆驼与 DNA 标志" style="width:100%;height:100%;display:block;object-fit:contain;border-radius:inherit;"></span>'
+    ],
+    ['placeholder="例如：万家玉"', 'placeholder="例如：小明"'],
+    [
+      '<p class="auth-dialog-note">管理员由服务器环境变量 LAB_ADMIN_EMAILS 指定。</p>',
+      ""
+    ]
+  ];
+
+  const replacedScript = replacements.reduce(
+    (result, [source, replacement]) => result.replaceAll(source, replacement),
+    scriptSource
   );
 
   return ensureCo2CylinderScript(replacedScript);
