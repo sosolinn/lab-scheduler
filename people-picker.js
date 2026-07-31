@@ -16,7 +16,6 @@ window.__createLabPeoplePicker = function createLabPeoplePicker(config) {
     optionsId,
     inputId,
     buttonId,
-    selectDataAttribute,
     getRecords,
     extractNames,
     refreshedEvent
@@ -55,6 +54,7 @@ window.__createLabPeoplePicker = function createLabPeoplePicker(config) {
       });
   }
 
+  const migrationCompleted = localStorage.getItem(migrationKey) === "1";
   const storedPeople = loadData(storageKey);
   const storedDeletedPeople = loadData(deletedStorageKey);
   const deletedPeople = new Set(
@@ -66,11 +66,17 @@ window.__createLabPeoplePicker = function createLabPeoplePicker(config) {
     ? getRecords().flatMap(extractNames)
     : [];
 
+  if (migrationCompleted) {
+    deletedPeople.clear();
+  }
+
   let availablePeople = uniqueNames([
     ...(Array.isArray(storedPeople) ? storedPeople : []),
-    ...recordPeople
+    ...(migrationCompleted ? [] : recordPeople)
   ]).filter((name) => !deletedPeople.has(comparisonKey(name)));
   const selectedPeople = new Set();
+  let isOpen = false;
+  let isBusy = false;
 
   hiddenInput.type = "hidden";
   hiddenInput.removeAttribute("required");
@@ -81,43 +87,56 @@ window.__createLabPeoplePicker = function createLabPeoplePicker(config) {
     label.textContent = `${labelText}（可多选）`;
   }
 
-  const removeButtonId = `${buttonId}Remove`;
+  const listId = `${optionsId}List`;
+  const popoverId = `${optionsId}Popover`;
+  const toggleId = `${buttonId}Toggle`;
   const picker = document.createElement("div");
-  picker.className = `duty-people-picker ${type}-people-picker`;
+  picker.className = `lab-multi-select ${type}-people-picker`;
   picker.innerHTML = `
-    <div class="duty-people-manager ${type}-people-manager">
-      <div class="duty-people-main">
-        <div
-          id="${optionsId}"
-          class="duty-people-options ${type}-people-options"
-          role="group"
-          aria-label="选择${labelText}"
-        ></div>
-        <input
-          type="text"
-          id="${inputId}"
-          maxlength="30"
-          autocomplete="off"
-          placeholder="${inputPlaceholder}"
-        >
-      </div>
-      <div class="duty-people-actions" aria-label="${labelText}名单管理">
-        <button type="button" id="${buttonId}" class="duty-person-action-button duty-person-add-button ${type}-person-add-button">
-          增加人员
-        </button>
-        <button type="button" id="${removeButtonId}" class="duty-person-action-button duty-person-delete-button ${type}-person-delete-button">
-          删除人员
-        </button>
-      </div>
+    <div
+      id="${optionsId}"
+      class="lab-multi-select-control"
+      role="combobox"
+      aria-haspopup="listbox"
+      aria-expanded="false"
+      aria-controls="${listId}"
+    >
+      <div class="lab-selected-tags" aria-live="polite"></div>
+      <input
+        type="text"
+        id="${inputId}"
+        class="lab-multi-search"
+        maxlength="30"
+        autocomplete="off"
+        aria-autocomplete="list"
+        aria-controls="${listId}"
+        placeholder="${escapeHtml(inputPlaceholder || `搜索或新建${labelText}`)}"
+      >
+      <button
+        type="button"
+        id="${toggleId}"
+        class="lab-multi-toggle"
+        aria-label="展开${labelText}选项"
+        tabindex="-1"
+      >⌄</button>
     </div>
-    <p class="duty-people-help ${type}-people-help">点击姓名可选择或取消；输入新姓名后点击“增加人员”。需要移除名单时，先选中人员，再点击“删除人员”。</p>
+    <div id="${popoverId}" class="lab-multi-popover" hidden>
+      <div id="${listId}" class="lab-multi-options" role="listbox" aria-multiselectable="true"></div>
+      <button type="button" class="lab-create-option" hidden></button>
+      <p class="lab-options-empty" hidden>${escapeHtml(emptyText || `暂无${labelText}选项`)}</p>
+    </div>
+    <p class="duty-people-help ${type}-people-help">点击后可搜索和多选；输入新姓名并按 Enter 可创建。标签“×”仅取消本次选择，下拉列表右侧删除键会从共享名单中移除人员。</p>
   `;
   hiddenInput.insertAdjacentElement("afterend", picker);
 
-  const optionsElement = document.querySelector(`#${optionsId}`);
-  const newNameInput = document.querySelector(`#${inputId}`);
-  const addButton = document.querySelector(`#${buttonId}`);
-  const removeButton = document.querySelector(`#${removeButtonId}`);
+  const control = picker.querySelector(".lab-multi-select-control");
+  const tagsElement = picker.querySelector(".lab-selected-tags");
+  const searchInput = picker.querySelector(".lab-multi-search");
+  const toggleButton = picker.querySelector(".lab-multi-toggle");
+  const popover = picker.querySelector(".lab-multi-popover");
+  const optionsElement = picker.querySelector(".lab-multi-options");
+  const createButton = picker.querySelector(".lab-create-option");
+  const emptyElement = picker.querySelector(".lab-options-empty");
 
   function saveLocalPeople() {
     saveData(storageKey, availablePeople);
@@ -133,32 +152,127 @@ window.__createLabPeoplePicker = function createLabPeoplePicker(config) {
     return availablePeople.find((name) => comparisonKey(name) === key);
   }
 
-  function renderPeople() {
-    if (availablePeople.length === 0) {
-      optionsElement.innerHTML = `<p class="duty-people-empty">${emptyText}</p>`;
-      syncSelectedPeople();
+  function setBusy(value) {
+    isBusy = value;
+    picker.classList.toggle("is-busy", value);
+    searchInput.disabled = value;
+    toggleButton.disabled = value;
+    createButton.disabled = value;
+    picker.querySelectorAll("button").forEach((button) => {
+      if (button !== createButton && button !== toggleButton) {
+        button.disabled = value;
+      }
+    });
+  }
+
+  function openPopover() {
+    if (isBusy) {
       return;
     }
+    isOpen = true;
+    popover.hidden = false;
+    control.classList.add("is-open");
+    control.setAttribute("aria-expanded", "true");
+    renderOptions();
+  }
 
-    optionsElement.innerHTML = availablePeople
+  function closePopover() {
+    isOpen = false;
+    popover.hidden = true;
+    control.classList.remove("is-open");
+    control.setAttribute("aria-expanded", "false");
+  }
+
+  function renderTags() {
+    tagsElement.innerHTML = Array.from(selectedPeople)
       .map((name) => {
-        const isSelected = selectedPeople.has(name);
         const safeName = escapeHtml(name);
-
         return `
-          <div class="duty-person-option${isSelected ? " selected" : ""}">
+          <span class="lab-person-tag">
+            <span class="lab-person-tag-label">${safeName}</span>
             <button
               type="button"
-              class="duty-person-select"
-              data-${selectDataAttribute}="${safeName}"
-              aria-pressed="${isSelected}"
-            >${safeName}</button>
+              class="lab-person-tag-remove"
+              data-unselect-person="${safeName}"
+              aria-label="取消选择${safeName}"
+              title="取消选择"
+            >×</button>
+          </span>
+        `;
+      })
+      .join("");
+
+    searchInput.placeholder = selectedPeople.size
+      ? "继续搜索或新建"
+      : inputPlaceholder || `搜索或新建${labelText}`;
+  }
+
+  function renderOptions() {
+    const query = normalizeName(searchInput.value);
+    const queryKey = comparisonKey(query);
+    const filteredPeople = availablePeople.filter((name) =>
+      comparisonKey(name).includes(queryKey)
+    );
+
+    optionsElement.innerHTML = filteredPeople
+      .map((name) => {
+        const safeName = escapeHtml(name);
+        const selected = selectedPeople.has(name);
+        return `
+          <div class="lab-person-option-row${selected ? " selected" : ""}">
+            <button
+              type="button"
+              class="lab-person-option-main"
+              data-select-person="${safeName}"
+              role="option"
+              aria-selected="${selected}"
+            >
+              <span class="lab-person-option-check">${selected ? "✓" : ""}</span>
+              <span class="lab-person-option-name">${safeName}</span>
+            </button>
+            <button
+              type="button"
+              class="lab-person-option-delete"
+              data-delete-person="${safeName}"
+              aria-label="从名单删除${safeName}"
+              title="从共享名单删除"
+            >×</button>
           </div>
         `;
       })
       .join("");
 
+    const exactName = query ? findAvailableName(query) : "";
+    createButton.hidden = !query || Boolean(exactName);
+    createButton.textContent = query ? `＋ 创建并选择“${query}”` : "";
+    createButton.dataset.createPerson = query;
+
+    emptyElement.hidden = filteredPeople.length > 0 || !createButton.hidden;
+    if (!query && availablePeople.length === 0) {
+      emptyElement.textContent = emptyText || `暂无${labelText}选项，请输入姓名创建。`;
+    } else if (query && filteredPeople.length === 0 && createButton.hidden) {
+      emptyElement.textContent = "没有匹配人员";
+    }
+  }
+
+  function renderPeople() {
+    renderTags();
+    renderOptions();
     syncSelectedPeople();
+  }
+
+  function togglePerson(rawName) {
+    const storedName = findAvailableName(rawName) || normalizeName(rawName);
+    if (!storedName) {
+      return;
+    }
+
+    if (selectedPeople.has(storedName)) {
+      selectedPeople.delete(storedName);
+    } else {
+      selectedPeople.add(storedName);
+    }
+    renderPeople();
   }
 
   async function readResponseError(response, fallbackMessage) {
@@ -231,6 +345,8 @@ window.__createLabPeoplePicker = function createLabPeoplePicker(config) {
     }
 
     localStorage.setItem(migrationKey, "1");
+    deletedPeople.clear();
+    saveLocalPeople();
   }
 
   async function refreshPeopleFromDatabase({ migrate = false } = {}) {
@@ -240,9 +356,7 @@ window.__createLabPeoplePicker = function createLabPeoplePicker(config) {
 
     const databasePeople = await fetchDatabasePeople();
     const selectedKeys = new Set(Array.from(selectedPeople).map(comparisonKey));
-    availablePeople = databasePeople.filter(
-      (name) => !deletedPeople.has(comparisonKey(name))
-    );
+    availablePeople = databasePeople;
     selectedPeople.clear();
     availablePeople.forEach((name) => {
       if (selectedKeys.has(comparisonKey(name))) {
@@ -253,141 +367,164 @@ window.__createLabPeoplePicker = function createLabPeoplePicker(config) {
     renderPeople();
   }
 
-  async function syncRecordPeopleToDatabase() {
-    const records = getRecords?.();
-    if (!Array.isArray(records)) {
-      return;
-    }
-
-    const names = uniqueNames(records.flatMap(extractNames)).filter(
-      (name) => !deletedPeople.has(comparisonKey(name))
-    );
-    const missingNames = names.filter((name) => !findAvailableName(name));
-
-    if (missingNames.length === 0) {
-      await refreshPeopleFromDatabase();
-      return;
-    }
-
-    for (const name of missingNames) {
-      await saveDatabasePerson(name);
-    }
-    await refreshPeopleFromDatabase();
-  }
-
-  async function addPerson() {
-    const newName = normalizeName(newNameInput.value);
-
+  async function createAndSelectPerson(rawName) {
+    const newName = normalizeName(rawName);
     if (!newName) {
-      showFormMessage(messageElement, `请输入需要添加的${labelText}姓名。`, "error");
-      newNameInput.focus();
       return;
     }
 
     const existingName = findAvailableName(newName);
     if (existingName) {
       selectedPeople.add(existingName);
-      newNameInput.value = "";
+      searchInput.value = "";
       renderPeople();
-      showFormMessage(messageElement, `“${existingName}”已存在，已为你选中。`, "success");
       return;
     }
 
-    addButton.disabled = true;
-    removeButton.disabled = true;
+    setBusy(true);
     try {
       await saveDatabasePerson(newName);
       deletedPeople.delete(comparisonKey(newName));
-      availablePeople.push(newName);
-      selectedPeople.add(newName);
+      availablePeople = uniqueNames([...availablePeople, newName]);
+      selectedPeople.add(findAvailableName(newName) || newName);
+      searchInput.value = "";
       saveLocalPeople();
-      newNameInput.value = "";
       renderPeople();
-      showFormMessage(messageElement, `已添加并同步“${newName}”。`, "success");
+      openPopover();
+      showFormMessage(messageElement, `已创建并选择“${newName}”。`, "success");
     } catch (error) {
       console.error(`添加${labelText}失败：`, error);
       showFormMessage(messageElement, error.message || `${labelText}保存失败。`, "error");
     } finally {
-      addButton.disabled = false;
-      removeButton.disabled = false;
+      setBusy(false);
+      searchInput.focus();
     }
   }
 
-  async function removeSelectedPeople() {
-    const namesToDelete = Array.from(selectedPeople);
-
-    if (namesToDelete.length === 0) {
-      showFormMessage(messageElement, `请先选择需要删除的${labelText}。`, "error");
-      optionsElement.focus?.();
+  async function removePersonFromList(rawName) {
+    const name = findAvailableName(rawName) || normalizeName(rawName);
+    if (!name) {
       return;
     }
 
-    const namesText = namesToDelete.join("、");
-    if (!window.confirm(`确定从${labelText}名单中删除“${namesText}”吗？`)) {
+    if (!window.confirm(`确定从共享${labelText}名单中删除“${name}”吗？历史记录不会受到影响。`)) {
       return;
     }
 
-    addButton.disabled = true;
-    removeButton.disabled = true;
-
+    setBusy(true);
     try {
-      for (const name of namesToDelete) {
-        await deleteDatabasePerson(name);
-      }
-
-      const deletedKeys = new Set(namesToDelete.map(comparisonKey));
-      namesToDelete.forEach((name) => deletedPeople.add(comparisonKey(name)));
+      await deleteDatabasePerson(name);
+      deletedPeople.add(comparisonKey(name));
       availablePeople = availablePeople.filter(
-        (person) => !deletedKeys.has(comparisonKey(person))
+        (person) => comparisonKey(person) !== comparisonKey(name)
       );
-      selectedPeople.clear();
+      Array.from(selectedPeople).forEach((person) => {
+        if (comparisonKey(person) === comparisonKey(name)) {
+          selectedPeople.delete(person);
+        }
+      });
       saveLocalPeople();
       renderPeople();
-      showFormMessage(
-        messageElement,
-        `已删除${namesToDelete.length}位${labelText}。`,
-        "success"
-      );
+      showFormMessage(messageElement, `已从共享名单删除“${name}”。`, "success");
     } catch (error) {
       console.error(`删除${labelText}失败：`, error);
-      try {
-        await refreshPeopleFromDatabase();
-      } catch (refreshError) {
-        console.error(`重新读取${labelText}名单失败：`, refreshError);
-      }
       showFormMessage(messageElement, error.message || `${labelText}删除失败。`, "error");
     } finally {
-      addButton.disabled = false;
-      removeButton.disabled = false;
+      setBusy(false);
+      searchInput.focus();
     }
   }
 
+  control.addEventListener("click", (event) => {
+    if (event.target.closest(".lab-person-tag-remove")) {
+      return;
+    }
+    openPopover();
+    searchInput.focus();
+  });
+
+  toggleButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    if (isOpen) {
+      closePopover();
+    } else {
+      openPopover();
+      searchInput.focus();
+    }
+  });
+
+  tagsElement.addEventListener("click", (event) => {
+    const removeTag = event.target.closest("[data-unselect-person]");
+    if (!removeTag) {
+      return;
+    }
+    event.stopPropagation();
+    const name = removeTag.dataset.unselectPerson;
+    const storedName = findAvailableName(name) || name;
+    selectedPeople.delete(storedName);
+    renderPeople();
+    searchInput.focus();
+  });
+
   optionsElement.addEventListener("click", (event) => {
-    const selectButton = event.target.closest(`[data-${selectDataAttribute}]`);
-    if (!selectButton) {
+    const deleteButton = event.target.closest("[data-delete-person]");
+    if (deleteButton) {
+      event.stopPropagation();
+      removePersonFromList(deleteButton.dataset.deletePerson);
       return;
     }
 
-    const name = selectButton.dataset[
-      selectDataAttribute.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())
-    ];
-    const storedName = findAvailableName(name) || name;
-
-    if (selectedPeople.has(storedName)) {
-      selectedPeople.delete(storedName);
-    } else {
-      selectedPeople.add(storedName);
+    const optionButton = event.target.closest("[data-select-person]");
+    if (!optionButton) {
+      return;
     }
-
+    togglePerson(optionButton.dataset.selectPerson);
+    searchInput.value = "";
     renderPeople();
+    searchInput.focus();
   });
 
-  addButton.addEventListener("click", addPerson);
-  removeButton.addEventListener("click", removeSelectedPeople);
-  newNameInput.addEventListener("keydown", (event) => {
+  createButton.addEventListener("click", () => {
+    createAndSelectPerson(createButton.dataset.createPerson || searchInput.value);
+  });
+
+  searchInput.addEventListener("focus", openPopover);
+  searchInput.addEventListener("input", () => {
+    openPopover();
+    renderOptions();
+  });
+  searchInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
       event.preventDefault();
-      addPerson();
+      const query = normalizeName(searchInput.value);
+      if (!query) {
+        return;
+      }
+      const existingName = findAvailableName(query);
+      if (existingName) {
+        selectedPeople.add(existingName);
+        searchInput.value = "";
+        renderPeople();
+      } else {
+        createAndSelectPerson(query);
+      }
+    } else if (event.key === "Backspace" && !searchInput.value && selectedPeople.size) {
+      const lastName = Array.from(selectedPeople).at(-1);
+      selectedPeople.delete(lastName);
+      renderPeople();
+    } else if (event.key === "Escape") {
+      closePopover();
+      searchInput.blur();
+    } else if (event.key === "ArrowDown") {
+      event.preventDefault();
+      openPopover();
+      picker.querySelector(".lab-person-option-main")?.focus();
+    }
+  });
+
+  document.addEventListener("pointerdown", (event) => {
+    if (!picker.contains(event.target)) {
+      closePopover();
     }
   });
 
@@ -395,12 +532,12 @@ window.__createLabPeoplePicker = function createLabPeoplePicker(config) {
     "submit",
     (event) => {
       syncSelectedPeople();
-
       if (selectedPeople.size === 0) {
         event.preventDefault();
         event.stopImmediatePropagation();
         showFormMessage(messageElement, `请至少选择一位${labelText}。`, "error");
-        newNameInput.focus();
+        openPopover();
+        searchInput.focus();
       }
     },
     true
@@ -409,15 +546,16 @@ window.__createLabPeoplePicker = function createLabPeoplePicker(config) {
   form.addEventListener("reset", () => {
     window.setTimeout(() => {
       selectedPeople.clear();
-      newNameInput.value = "";
+      searchInput.value = "";
+      closePopover();
       renderPeople();
     }, 0);
   });
 
   if (refreshedEvent) {
     window.addEventListener(refreshedEvent, () => {
-      syncRecordPeopleToDatabase().catch((error) => {
-        console.error(`同步${labelText}名单失败：`, error);
+      refreshPeopleFromDatabase().catch((error) => {
+        console.error(`刷新${labelText}名单失败：`, error);
       });
     });
   }
