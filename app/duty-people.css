@@ -2,12 +2,27 @@
   min-width: 0;
 }
 
+.duty-people-manager {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 116px;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.duty-people-main {
+  min-width: 0;
+  display: grid;
+  gap: 10px;
+}
+
 .duty-people-options {
-  min-height: 48px;
+  min-height: 54px;
   display: flex;
   flex-wrap: wrap;
+  align-content: flex-start;
   align-items: flex-start;
-  gap: 10px;
+  gap: 9px;
   padding: 10px;
   border: 1px solid var(--border);
   border-radius: 11px;
@@ -16,23 +31,20 @@
 
 .duty-people-empty {
   width: 100%;
-  padding: 5px 3px;
+  padding: 6px 3px;
   color: var(--text-secondary);
   font-size: 13px;
   line-height: 1.6;
 }
 
 .duty-person-option {
-  position: relative;
   max-width: 100%;
-  padding-top: 3px;
-  padding-right: 3px;
 }
 
 .duty-person-select {
   max-width: 100%;
   min-height: 40px;
-  padding: 9px 32px 9px 14px;
+  padding: 9px 14px;
   overflow: hidden;
   border: 1px solid #bfdbfe;
   border-radius: 10px;
@@ -56,59 +68,60 @@
   box-shadow: 0 5px 12px rgba(37, 99, 235, 0.18);
 }
 
-.duty-person-remove {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 21px;
-  height: 21px;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 2px solid white;
-  border-radius: 50%;
-  color: #6b7280;
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1;
-  background: #e5e7eb;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
-}
-
-.duty-person-remove:hover,
-.duty-person-remove:focus-visible {
-  color: white;
-  background: var(--danger);
-  outline: none;
-}
-
-.duty-person-add-row {
-  min-width: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.duty-person-add-row input {
+.duty-people-main > input {
   width: 100%;
   min-width: 0;
+  min-height: 44px;
+}
+
+.duty-people-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.duty-person-action-button {
+  width: 100%;
+  min-height: 44px;
+  flex: 1;
+  padding: 9px 10px;
+  border-radius: 9px;
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: nowrap;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.duty-person-action-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.duty-person-action-button:disabled {
+  cursor: wait;
+  opacity: 0.58;
 }
 
 .duty-person-add-button {
-  min-height: 44px;
-  padding: 10px 16px;
   border: 1px solid #bfdbfe;
-  border-radius: 9px;
   color: var(--primary);
-  font-weight: 700;
-  white-space: nowrap;
   background: var(--primary-light);
 }
 
-.duty-person-add-button:hover {
+.duty-person-add-button:hover:not(:disabled) {
   border-color: var(--primary);
   background: #dbeafe;
+}
+
+.duty-person-delete-button {
+  border: 1px solid #fecaca;
+  color: var(--danger);
+  background: var(--danger-bg);
+}
+
+.duty-person-delete-button:hover:not(:disabled) {
+  border-color: var(--danger);
+  color: #b91c1c;
+  background: #fee2e2;
 }
 
 .duty-people-help {
@@ -119,25 +132,29 @@
 }
 
 @media (max-width: 480px) {
+  .duty-people-manager {
+    grid-template-columns: minmax(0, 1fr) 94px;
+    gap: 8px;
+  }
+
+  .duty-people-main,
+  .duty-people-actions {
+    gap: 8px;
+  }
+
   .duty-people-options {
-    gap: 9px;
+    gap: 8px;
     padding: 9px;
   }
 
-  .duty-person-option {
-    max-width: 100%;
-  }
-
   .duty-person-select {
+    min-height: 40px;
+    padding: 8px 12px;
+  }
+
+  .duty-person-action-button {
     min-height: 42px;
-    padding-right: 31px;
-  }
-
-  .duty-person-add-row {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .duty-person-add-button {
-    width: 100%;
+    padding: 8px 6px;
+    font-size: 12px;
   }
 }
