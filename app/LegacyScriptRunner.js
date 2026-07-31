@@ -5,6 +5,7 @@ import { useEffect } from "react";
 const INITIALIZED_FLAG = "__LAB_SCHEDULER_LEGACY_INITIALIZED__";
 const BOOKING_STORAGE_KEY = "labSchedulerBookings";
 const BOOKING_API_ENDPOINT = "/api/bookings";
+const PIPETTE_TIPS_CHECK_TEXT = "插好 5 mL 与 10 μL 枪头";
 
 function readLocalBookings() {
   try {
@@ -84,6 +85,60 @@ async function hydrateBookingsFromDatabase() {
   );
 }
 
+function ensurePipetteTipsMarkup() {
+  const selectionCount = document.querySelector("#dutySelectionCount");
+  if (selectionCount) {
+    selectionCount.textContent = selectionCount.textContent.replace(
+      /\/\d+ 项$/,
+      "/17 项"
+    );
+  }
+
+  if (
+    document.querySelector(
+      `input[name="dutyCheck"][value="${PIPETTE_TIPS_CHECK_TEXT}"]`
+    )
+  ) {
+    return;
+  }
+
+  const pipetteInput = document.querySelector(
+    'input[name="dutyCheck"][value="移液器已归位"]'
+  );
+  const pipetteOption = pipetteInput?.closest("label.duty-check-option");
+
+  if (!pipetteOption) {
+    return;
+  }
+
+  const tipsOption = document.createElement("label");
+  tipsOption.className = "duty-check-option";
+
+  const tipsInput = document.createElement("input");
+  tipsInput.type = "checkbox";
+  tipsInput.className = "duty-check-input";
+  tipsInput.name = "dutyCheck";
+  tipsInput.value = PIPETTE_TIPS_CHECK_TEXT;
+
+  const tipsText = document.createElement("span");
+  tipsText.textContent = PIPETTE_TIPS_CHECK_TEXT;
+
+  tipsOption.append(tipsInput, tipsText);
+  pipetteOption.insertAdjacentElement("afterend", tipsOption);
+}
+
+function ensurePipetteTipsSource(source) {
+  if (source.includes(`"${PIPETTE_TIPS_CHECK_TEXT}"`)) {
+    return source;
+  }
+
+  return source.replace(
+    /("移液器已归位",)(\s*)"液氮罐液氮充足"/,
+    (match, pipetteItem, spacing) =>
+      `${pipetteItem}${spacing}"${PIPETTE_TIPS_CHECK_TEXT}",${spacing}"液氮罐液氮充足"`
+  );
+}
+
 export default function LegacyScriptRunner({ source }) {
   useEffect(() => {
     if (window[INITIALIZED_FLAG]) {
@@ -104,10 +159,11 @@ export default function LegacyScriptRunner({ source }) {
       }
 
       window[INITIALIZED_FLAG] = true;
+      ensurePipetteTipsMarkup();
 
       const script = document.createElement("script");
       script.setAttribute("data-lab-scheduler-runtime", "true");
-      script.textContent = source;
+      script.textContent = ensurePipetteTipsSource(source);
       document.body.appendChild(script);
     }
 
