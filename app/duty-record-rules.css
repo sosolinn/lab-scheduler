@@ -1,0 +1,15 @@
+#dutyDate[readonly] {
+  color: var(--text);
+  background: #f9fafb;
+  cursor: not-allowed;
+}
+
+.duty-submission-time {
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.duty-record-item .delete-button[data-delete-duty] {
+  display: none;
+}
