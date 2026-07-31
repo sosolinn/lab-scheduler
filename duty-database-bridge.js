@@ -4,6 +4,7 @@ const __LAB_DUTIES_MIGRATION_KEY = "labSchedulerDutiesMigratedToDatabase";
 const __labDutyOriginalSaveData = saveData;
 let __labSyncedDuties = normalizeDuties(duties).map((duty) => ({ ...duty }));
 let __labDutySyncQueue = Promise.resolve();
+let __labDutyDatabaseWarningShown = false;
 
 async function __labReadDutyResponseError(response, fallbackMessage) {
   try {
@@ -12,6 +13,21 @@ async function __labReadDutyResponseError(response, fallbackMessage) {
   } catch {
     return fallbackMessage;
   }
+}
+
+function __labReportDutyDatabaseUnavailable(error, context) {
+  const message = error?.message || "值日数据库暂时不可用。";
+
+  if (!__labDutyDatabaseWarningShown) {
+    console.warn(`${context}：${message}`);
+    __labDutyDatabaseWarningShown = true;
+  }
+
+  return message;
+}
+
+function __labMarkDutyDatabaseAvailable() {
+  __labDutyDatabaseWarningShown = false;
 }
 
 async function __labFetchDatabaseDuties() {
@@ -110,6 +126,7 @@ async function __labRefreshDutiesFromDatabase({ migrateLocal = false } = {}) {
     }
   }
 
+  __labMarkDutyDatabaseAvailable();
   localStorage.setItem(__LAB_DUTIES_MIGRATION_KEY, "1");
   duties = databaseDuties;
   __labSyncedDuties = databaseDuties.map((duty) => ({ ...duty }));
@@ -154,18 +171,15 @@ saveData = function saveDataWithDutyDatabaseSync(key, data) {
 
   __labDutySyncQueue = __labDutySyncQueue
     .then(() => __labApplyDutyChanges(changedDuties))
-    .catch(async (error) => {
-      console.error("同步值日数据库失败：", error);
-
-      try {
-        await __labRefreshDutiesFromDatabase();
-      } catch (refreshError) {
-        console.error("重新读取值日数据库失败：", refreshError);
-      }
+    .catch((error) => {
+      const message = __labReportDutyDatabaseUnavailable(
+        error,
+        "同步值日数据库失败"
+      );
 
       showFormMessage(
         dutyMessage,
-        error.message || "值日数据库同步失败，请检查连接后重试。",
+        `${message} 本次修改已暂存在当前浏览器，数据库恢复后请重新保存。`,
         "error"
       );
     });
@@ -175,7 +189,7 @@ function __labQueueDutyDatabaseRefresh(options) {
   __labDutySyncQueue = __labDutySyncQueue
     .then(() => __labRefreshDutiesFromDatabase(options))
     .catch((error) => {
-      console.error("刷新值日数据库失败：", error);
+      __labReportDutyDatabaseUnavailable(error, "刷新值日数据库失败");
     });
 }
 
