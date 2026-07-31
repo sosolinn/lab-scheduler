@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { getDatabase } from "../../../lib/database";
+import { readAuthContext } from "../../../lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -248,6 +249,19 @@ export async function GET() {
 export async function POST(request) {
   try {
     await ensureDutiesTable();
+
+    const auth = await readAuthContext(request, { required: true });
+    if (auth.error) {
+      return json(
+        {
+          error:
+            auth.status === 401
+              ? "请先登录后再提交值日记录。"
+              : auth.error
+        },
+        auth.status || 401
+      );
+    }
 
     let payload;
     try {
