@@ -4,6 +4,28 @@
   cursor: not-allowed;
 }
 
+.duty-time-status {
+  margin-top: 7px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.duty-time-status.syncing {
+  color: #64748b;
+}
+
+.duty-time-status.synced {
+  color: #047857;
+}
+
+.duty-time-status.stale {
+  color: #b45309;
+}
+
+.duty-time-status.error {
+  color: var(--danger);
+}
+
 .duty-submission-time {
   margin-top: 4px;
   color: var(--text-secondary);

@@ -1,4 +1,5 @@
 const __LAB_DUTIES_API_ENDPOINT = "/api/duties";
+const __LAB_DUTIES_TIME_ENDPOINT = "/api/beijing-time";
 const __LAB_DUTIES_MIGRATION_KEY = "labSchedulerDutiesMigratedToDatabase";
 const __labDutyOriginalSaveData = saveData;
 let __labSyncedDuties = normalizeDuties(duties).map((duty) => ({ ...duty }));
@@ -30,6 +31,24 @@ async function __labFetchDatabaseDuties() {
 
   const payload = await response.json();
   return normalizeDuties(payload.duties || []);
+}
+
+async function __labFetchServerBeijingDate() {
+  const response = await fetch(__LAB_DUTIES_TIME_ENDPOINT, {
+    method: "GET",
+    cache: "no-store",
+    headers: { Accept: "application/json" }
+  });
+
+  if (!response.ok) {
+    throw new Error("无法读取服务端北京时间。");
+  }
+
+  const payload = await response.json();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(payload.date || "")) {
+    throw new Error("服务端北京时间格式不正确。");
+  }
+  return payload.date;
 }
 
 async function __labCreateDatabaseDuty(duty) {
@@ -75,7 +94,7 @@ async function __labRefreshDutiesFromDatabase({ migrateLocal = false } = {}) {
     databaseDuties.length === 0 &&
     __labSyncedDuties.length > 0
   ) {
-    const today = getTodayString();
+    const today = await __labFetchServerBeijingDate();
     const todayDuties = __labSyncedDuties
       .filter((duty) => duty.date === today)
       .sort((a, b) =>
