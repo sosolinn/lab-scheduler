@@ -76,6 +76,16 @@ owner_email
 updated_at
 ```
 
+## 锁定 Supabase Data API
+
+网站通过受保护的 Next.js API 和 `DATABASE_URL` 访问数据库，不允许浏览器绕过权限接口直接写表。部署登录功能后，在 Supabase SQL Editor 中执行：
+
+```text
+supabase/migrations/004_secure_data_api.sql
+```
+
+该迁移会为 `lab_bookings`、`lab_duties` 和 `lab_people` 启用 RLS，并撤销 `anon`、`authenticated` 对这些表的直接 Data API 权限。Next.js 服务端使用数据库连接字符串，不受这项撤销影响。
+
 ## 本地运行
 
 ```bash
