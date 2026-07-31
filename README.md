@@ -1,39 +1,79 @@
 # LabScheduler
 
-实验室超净台预约与值日管理系统，基于 Next.js App Router。预约记录已接入 Supabase PostgreSQL，值日记录暂时继续保存在浏览器 localStorage 中。
+楷模实验室超净台预约与值日管理系统，基于 Next.js App Router、Supabase PostgreSQL 与 Supabase Auth。
 
-## 项目结构
+## 主要功能
 
-- `app/layout.js`：Next.js 根布局与全局样式入口
-- `app/page.js`：读取并渲染原页面结构
-- `app/LegacyScriptRunner.js`：启动页面逻辑并在启动前加载数据库预约
-- `app/api/bookings/route.js`：预约记录的读取、新增和删除 API
-- `lib/database.js`：服务器端 PostgreSQL 连接
-- `database-bridge.js`：在不改变现有 UI 的前提下同步预约数据
-- `supabase/migrations/001_create_lab_bookings.sql`：预约表 SQL 结构
-- `index.html`、`style.css`、`script.js`：保留的页面结构、样式和原有交互逻辑
+- 超净台一周预约与时间冲突校验
+- Supabase 共享预约、值日和人员名单
+- 邮箱＋密码注册、登录和退出
+- 新预约自动绑定创建者的 Supabase 用户 ID
+- 普通用户只能修改、删除本人预约
+- 管理员可以管理全部预约和升级前未绑定所有者的旧预约
+- 值日记录仅允许北京时间当天提交，同日重新提交会覆盖
 
-## 配置 Supabase
+## 环境变量
 
-复制环境变量示例：
+复制示例文件：
 
 ```bash
 cp .env.example .env.local
 ```
 
-在 `.env.local` 中填写 Supabase 提供的连接地址：
+填写：
 
 ```env
-DATABASE_URL="你的 Supabase Transaction pooler URL"
-DIRECT_URL="你的 Supabase Direct connection URL"
+DATABASE_URL="Supabase Transaction pooler URL"
+DIRECT_URL="Supabase Direct connection URL"
+NEXT_PUBLIC_SUPABASE_URL="https://PROJECT_REF.supabase.co"
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="sb_publishable_xxxxxxxxx"
+LAB_ADMIN_EMAILS="admin@example.com,second-admin@example.com"
 ```
 
-网站运行时只使用 `DATABASE_URL`。真实数据库地址只能放在本地 `.env.local` 或 Vercel 等部署平台的环境变量中，不要提交到 GitHub。
+说明：
 
-预约 API 第一次运行时会自动创建 `lab_bookings` 表。也可以在 Supabase SQL Editor 中手动执行：
+- `DATABASE_URL`：网站 API 连接 PostgreSQL 使用。
+- `NEXT_PUBLIC_SUPABASE_URL` 和 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`：Supabase Auth 登录使用；publishable key 可以安全发送到浏览器。
+- `LAB_ADMIN_EMAILS`：服务器端管理员邮箱白名单，多个邮箱用英文逗号分隔。不要把真实管理员邮箱写入公开仓库，应该放在 `.env.local` 或 Netlify 环境变量中。
+
+## Supabase Auth 设置
+
+在 Supabase Dashboard 中进入：
 
 ```text
-supabase/migrations/001_create_lab_bookings.sql
+Authentication → Providers → Email
+```
+
+启用 Email provider。若启用 Confirm email，新注册用户需要先点击确认邮件再登录。
+
+部署到 Netlify 时，还应在：
+
+```text
+Authentication → URL Configuration
+```
+
+将 Site URL 设置为正式网站地址，并把本地和正式地址加入 Redirect URLs，例如：
+
+```text
+http://localhost:3000/**
+https://camellab-scheduler.netlify.app/**
+```
+
+## 权限规则
+
+- 所有人都可以查看预约情况。
+- 未登录用户不能创建、修改或删除预约。
+- 新预约的 `owner_id` 由服务端从已验证的 Access Token 获取，客户端提交的所有者信息不会被信任。
+- 普通用户只能修改和删除 `owner_id` 等于本人用户 ID 的预约。
+- `LAB_ADMIN_EMAILS` 中的管理员可以修改和删除全部预约。
+- 升级前创建、没有 `owner_id` 的旧预约只能由管理员管理。
+
+预约 API 首次运行时会自动为 `lab_bookings` 增加：
+
+```text
+owner_id
+owner_email
+updated_at
 ```
 
 ## 本地运行
@@ -43,15 +83,26 @@ npm install
 npm run dev
 ```
 
-浏览器打开 `http://localhost:3000`。首次加载时，网站会尝试把当前浏览器中原有的预约记录迁移到数据库；遇到与数据库现有预约冲突的本地记录时，以数据库记录为准。
+浏览器打开：
 
-## 构建与运行
+```text
+http://localhost:3000
+```
+
+## Netlify 部署
+
+先在 Netlify 当前站点中配置全部环境变量，再执行：
+
+```bash
+netlify deploy --prod --context production
+```
+
+环境变量变更后必须重新部署。
+
+## 构建检查
 
 ```bash
 npm run build
-npm run start
 ```
 
-由于预约功能使用服务端 API 和数据库连接，本项目不能再作为纯静态站点部署到 GitHub Pages。推荐部署到 Vercel、支持 Node.js 的服务器或其他能够运行 Next.js 服务端功能的平台，并在部署平台配置 `DATABASE_URL`。
-
-每次推送或提交 Pull Request 时，GitHub Actions 会自动安装依赖并执行 Next.js 构建检查。
+GitHub Actions 会检查所有浏览器运行脚本的 JavaScript 语法，并执行 Next.js 生产构建。
