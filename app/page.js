@@ -7,6 +7,147 @@ export const dynamic = "force-static";
 
 const CO2_CYLINDER_CHECK_TEXT = "CO₂钢瓶气体充足";
 
+const SETTINGS_NAV_MARKUP = `
+          <button class="nav-item" data-page="settings">
+            <span>⚙</span>
+            设置
+          </button>`;
+
+const SETTINGS_PAGE_MARKUP = `
+      <section id="settings" class="page">
+        <div class="settings-page-grid">
+          <article class="content-card settings-overview-card">
+            <div class="card-heading">
+              <div>
+                <h3>账户状态</h3>
+                <p>查看当前账户及登录状态</p>
+              </div>
+            </div>
+
+            <div class="settings-account-summary">
+              <div class="settings-account-avatar" id="settingsAccountAvatar">未</div>
+              <div class="settings-account-copy">
+                <strong id="settingsAccountName">未登录</strong>
+                <p>楷模实验室账户</p>
+              </div>
+              <span class="settings-status-badge offline" id="settingsLoginStatus">检查中</span>
+            </div>
+
+            <dl class="settings-account-details">
+              <div class="settings-detail-row">
+                <dt>登录邮箱</dt>
+                <dd id="settingsAccountEmail">—</dd>
+              </div>
+              <div class="settings-detail-row">
+                <dt>账户角色</dt>
+                <dd id="settingsAccountRole">—</dd>
+              </div>
+              <div class="settings-detail-row">
+                <dt>认证方式</dt>
+                <dd>Supabase 邮箱与密码</dd>
+              </div>
+            </dl>
+
+            <div class="settings-session-actions">
+              <button type="button" class="settings-secondary-button" id="settingsLoginButton">
+                登录 / 注册
+              </button>
+              <button type="button" class="settings-danger-button" id="settingsLogoutButton" hidden>
+                退出当前账户
+              </button>
+            </div>
+          </article>
+
+          <div class="settings-stack">
+            <article class="content-card settings-form-card">
+              <div class="card-heading">
+                <div>
+                  <h3>账户资料</h3>
+                  <p>修改显示姓名或登录邮箱</p>
+                </div>
+              </div>
+
+              <form id="settingsProfileForm">
+                <div class="settings-form-grid">
+                  <div class="form-group">
+                    <label for="settingsDisplayName">显示姓名</label>
+                    <input
+                      type="text"
+                      id="settingsDisplayName"
+                      maxlength="30"
+                      autocomplete="name"
+                      placeholder="例如：小明"
+                      data-settings-auth-required
+                    >
+                  </div>
+                  <div class="form-group">
+                    <label for="settingsEmail">登录邮箱</label>
+                    <input
+                      type="email"
+                      id="settingsEmail"
+                      autocomplete="email"
+                      placeholder="请输入邮箱"
+                      data-settings-auth-required
+                    >
+                  </div>
+                </div>
+                <p class="settings-help-text">
+                  修改邮箱后，可能需要前往当前邮箱和新邮箱完成确认，具体取决于 Supabase 的认证设置。
+                </p>
+                <button type="submit" class="primary-button" data-settings-auth-required>
+                  保存账户资料
+                </button>
+                <p class="settings-message" id="settingsProfileMessage"></p>
+              </form>
+            </article>
+
+            <article class="content-card settings-form-card">
+              <div class="card-heading">
+                <div>
+                  <h3>修改密码</h3>
+                  <p>为当前登录账户设置新密码</p>
+                </div>
+              </div>
+
+              <form id="settingsPasswordForm">
+                <div class="settings-form-grid">
+                  <div class="form-group">
+                    <label for="settingsNewPassword">新密码</label>
+                    <input
+                      type="password"
+                      id="settingsNewPassword"
+                      minlength="6"
+                      autocomplete="new-password"
+                      placeholder="至少 6 位密码"
+                      data-settings-auth-required
+                    >
+                  </div>
+                  <div class="form-group">
+                    <label for="settingsConfirmPassword">确认新密码</label>
+                    <input
+                      type="password"
+                      id="settingsConfirmPassword"
+                      minlength="6"
+                      autocomplete="new-password"
+                      placeholder="再次输入新密码"
+                      data-settings-auth-required
+                    >
+                  </div>
+                </div>
+                <button type="submit" class="primary-button" data-settings-auth-required>
+                  更新密码
+                </button>
+                <p class="settings-message" id="settingsPasswordMessage"></p>
+              </form>
+
+              <p class="settings-security-note">
+                为保护账户安全，系统不会显示或读取原密码。密码由 Supabase Auth 安全保存，此处仅支持设置新密码。
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>`;
+
 function readProjectFile(filename) {
   return fs.readFileSync(path.join(process.cwd(), filename), "utf8");
 }
@@ -36,6 +177,24 @@ function ensureCo2CylinderMarkup(markup) {
   );
 }
 
+function ensureSettingsMarkup(markup) {
+  let result = markup;
+
+  if (!result.includes('data-page="settings"')) {
+    const dutyNavigationPattern = /(<button class="nav-item" data-page="duty">[\s\S]*?<\/button>)(\s*<\/nav>)/;
+    result = result.replace(
+      dutyNavigationPattern,
+      `$1${SETTINGS_NAV_MARKUP}$2`
+    );
+  }
+
+  if (!result.includes('id="settings"')) {
+    result = result.replace(/\s*<\/main>/, `${SETTINGS_PAGE_MARKUP}\n    </main>`);
+  }
+
+  return result;
+}
+
 function applyDisplayTextReplacements(markup) {
   const replacements = [
     [
@@ -63,7 +222,7 @@ function applyDisplayTextReplacements(markup) {
     markup
   );
 
-  return ensureCo2CylinderMarkup(replacedMarkup);
+  return ensureSettingsMarkup(ensureCo2CylinderMarkup(replacedMarkup));
 }
 
 function ensureCo2CylinderScript(scriptSource) {
@@ -77,6 +236,17 @@ function ensureCo2CylinderScript(scriptSource) {
     checklistPattern,
     (match, temperatureItem, lineBreak, indentation) =>
       `${temperatureItem}${lineBreak}${indentation}"${CO2_CYLINDER_CHECK_TEXT}",${lineBreak}${indentation}"培养箱门关闭严密",`
+  );
+}
+
+function ensureSettingsPageTitle(scriptSource) {
+  if (scriptSource.includes('settings: "设置"')) {
+    return scriptSource;
+  }
+
+  return scriptSource.replace(
+    /(const pageTitles = \{[\s\S]*?duty:\s*"值日排班")(\s*\};)/,
+    '$1,\n  settings: "设置"$2'
   );
 }
 
@@ -102,7 +272,7 @@ function applyScriptTextReplacements(scriptSource) {
     scriptSource
   );
 
-  return ensureCo2CylinderScript(replacedScript);
+  return ensureSettingsPageTitle(ensureCo2CylinderScript(replacedScript));
 }
 
 function getLegacyMarkup() {
@@ -133,8 +303,9 @@ export default function HomePage() {
   const peoplePickerControlScript = readProjectFile("people-picker-control.js");
   const dutyRulesScript = readProjectFile("duty-rules.js");
   const bookingAuthRulesScript = readProjectFile("booking-auth-rules.js");
+  const settingsAccountScript = readProjectFile("settings-account.js");
   const scriptSource = applyScriptTextReplacements(
-    `${legacyScript}\n\n${authScript}\n\n${databaseBridge}\n\n${dutyDatabaseBridge}\n\n${peoplePickerScript}\n\n${dutyPeopleScript}\n\n${bookingPeopleScript}\n\n${peoplePickerControlScript}\n\n${dutyRulesScript}\n\n${bookingAuthRulesScript}`
+    `${legacyScript}\n\n${authScript}\n\n${databaseBridge}\n\n${dutyDatabaseBridge}\n\n${peoplePickerScript}\n\n${dutyPeopleScript}\n\n${bookingPeopleScript}\n\n${peoplePickerControlScript}\n\n${dutyRulesScript}\n\n${bookingAuthRulesScript}\n\n${settingsAccountScript}`
   );
 
   return (
