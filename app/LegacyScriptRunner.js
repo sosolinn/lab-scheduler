@@ -13,7 +13,7 @@ function readLocalBookings() {
     const bookings = value ? JSON.parse(value) : [];
     return Array.isArray(bookings) ? bookings : [];
   } catch (error) {
-    console.error("读取本地预约缓存失败：", error);
+    console.warn("读取本地预约缓存失败：", error);
     return [];
   }
 }
@@ -139,6 +139,20 @@ function ensurePipetteTipsSource(source) {
   );
 }
 
+function downgradeRecoverableDatabaseLogs(source) {
+  const recoverableLogs = [
+    ["console.error(`添加${labelText}失败：`, error);", "console.warn(`添加${labelText}失败：`, error);"],
+    ["console.error(`删除${labelText}失败：`, error);", "console.warn(`删除${labelText}失败：`, error);"],
+    ["console.error(`刷新${labelText}名单失败：`, error);", "console.warn(`刷新${labelText}名单失败：`, error);"],
+    ["console.error(`初始化${labelText}名单失败：`, error);", "console.warn(`初始化${labelText}名单失败：`, error);"]
+  ];
+
+  return recoverableLogs.reduce(
+    (result, [from, to]) => result.replaceAll(from, to),
+    source
+  );
+}
+
 export default function LegacyScriptRunner({ source }) {
   useEffect(() => {
     if (window[INITIALIZED_FLAG]) {
@@ -151,7 +165,7 @@ export default function LegacyScriptRunner({ source }) {
       try {
         await hydrateBookingsFromDatabase();
       } catch (error) {
-        console.error("连接预约数据库失败，将暂时使用浏览器缓存：", error);
+        console.warn("连接预约数据库失败，将暂时使用浏览器缓存：", error);
       }
 
       if (cancelled || window[INITIALIZED_FLAG]) {
@@ -163,7 +177,9 @@ export default function LegacyScriptRunner({ source }) {
 
       const script = document.createElement("script");
       script.setAttribute("data-lab-scheduler-runtime", "true");
-      script.textContent = ensurePipetteTipsSource(source);
+      script.textContent = downgradeRecoverableDatabaseLogs(
+        ensurePipetteTipsSource(source)
+      );
       document.body.appendChild(script);
     }
 
