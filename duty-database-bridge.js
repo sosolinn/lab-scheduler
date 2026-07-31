@@ -15,6 +15,24 @@ async function __labReadDutyResponseError(response, fallbackMessage) {
   }
 }
 
+async function __labDutyRequestHeaders(baseHeaders = {}) {
+  try {
+    await window.__labAuthReady;
+  } catch {
+    // 身份初始化失败时仍允许读取公开值日记录，写入会由服务端拒绝。
+  }
+
+  const authHeaders =
+    typeof window.__labGetAuthHeaders === "function"
+      ? await window.__labGetAuthHeaders()
+      : {};
+  return { ...baseHeaders, ...authHeaders };
+}
+
+function __labDutyHasAuthenticatedUser() {
+  return Boolean(window.__labGetAuthState?.().user);
+}
+
 function __labReportDutyDatabaseUnavailable(error, context) {
   const message = error?.message || "值日数据库暂时不可用。";
 
@@ -34,9 +52,7 @@ async function __labFetchDatabaseDuties() {
   const response = await fetch(__LAB_DUTIES_API_ENDPOINT, {
     method: "GET",
     cache: "no-store",
-    headers: {
-      Accept: "application/json"
-    }
+    headers: { Accept: "application/json" }
   });
 
   if (!response.ok) {
@@ -70,10 +86,10 @@ async function __labFetchServerBeijingDate() {
 async function __labCreateDatabaseDuty(duty) {
   const response = await fetch(__LAB_DUTIES_API_ENDPOINT, {
     method: "POST",
-    headers: {
+    headers: await __labDutyRequestHeaders({
       "Content-Type": "application/json",
       Accept: "application/json"
-    },
+    }),
     body: JSON.stringify(duty)
   });
 
@@ -103,31 +119,44 @@ function __labDutySignature(duty) {
 
 async function __labRefreshDutiesFromDatabase({ migrateLocal = false } = {}) {
   let databaseDuties = await __labFetchDatabaseDuties();
-
-  if (
+  const migrationAlreadyCompleted =
+    localStorage.getItem(__LAB_DUTIES_MIGRATION_KEY) === "1";
+  const hasLocalDuties = __labSyncedDuties.length > 0;
+  const shouldConsiderMigration =
     migrateLocal &&
-    localStorage.getItem(__LAB_DUTIES_MIGRATION_KEY) !== "1" &&
+    !migrationAlreadyCompleted &&
     databaseDuties.length === 0 &&
-    __labSyncedDuties.length > 0
-  ) {
-    const today = await __labFetchServerBeijingDate();
-    const todayDuties = __labSyncedDuties
-      .filter((duty) => duty.date === today)
-      .sort((a, b) =>
-        (a.submittedAt || a.createdAt || "").localeCompare(
-          b.submittedAt || b.createdAt || ""
-        )
-      );
-    const latestTodayDuty = todayDuties.at(-1);
+    hasLocalDuties;
 
-    if (latestTodayDuty) {
-      await __labCreateDatabaseDuty(latestTodayDuty);
-      databaseDuties = await __labFetchDatabaseDuties();
+  if (shouldConsiderMigration) {
+    try {
+      await window.__labAuthReady;
+    } catch {
+      // 登录初始化失败时保留迁移标记，等待下一次登录后再处理。
     }
+
+    if (__labDutyHasAuthenticatedUser()) {
+      const today = await __labFetchServerBeijingDate();
+      const todayDuties = __labSyncedDuties
+        .filter((duty) => duty.date === today)
+        .sort((a, b) =>
+          (a.submittedAt || a.createdAt || "").localeCompare(
+            b.submittedAt || b.createdAt || ""
+          )
+        );
+      const latestTodayDuty = todayDuties.at(-1);
+
+      if (latestTodayDuty) {
+        await __labCreateDatabaseDuty(latestTodayDuty);
+        databaseDuties = await __labFetchDatabaseDuties();
+      }
+      localStorage.setItem(__LAB_DUTIES_MIGRATION_KEY, "1");
+    }
+  } else if (migrateLocal && !migrationAlreadyCompleted) {
+    localStorage.setItem(__LAB_DUTIES_MIGRATION_KEY, "1");
   }
 
   __labMarkDutyDatabaseAvailable();
-  localStorage.setItem(__LAB_DUTIES_MIGRATION_KEY, "1");
   duties = databaseDuties;
   __labSyncedDuties = databaseDuties.map((duty) => ({ ...duty }));
   __labDutyOriginalSaveData(DUTY_STORAGE_KEY, databaseDuties);
@@ -179,7 +208,7 @@ saveData = function saveDataWithDutyDatabaseSync(key, data) {
 
       showFormMessage(
         dutyMessage,
-        `${message} 本次修改已暂存在当前浏览器，数据库恢复后请重新保存。`,
+        `${message} 本次修改已暂存在当前浏览器，登录并恢复连接后请重新提交。`,
         "error"
       );
     });
@@ -194,6 +223,9 @@ function __labQueueDutyDatabaseRefresh(options) {
 }
 
 window.addEventListener("focus", () => __labQueueDutyDatabaseRefresh());
+window.addEventListener("lab:auth-changed", () =>
+  __labQueueDutyDatabaseRefresh({ migrateLocal: true })
+);
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
     __labQueueDutyDatabaseRefresh();
