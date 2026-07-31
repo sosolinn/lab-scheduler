@@ -5,6 +5,7 @@ import "./duty-people.css";
 import "./compact-header.css";
 import "./duty-record-rules.css";
 import "./auth.css";
+import "./auth-overrides.css";
 
 export const metadata = {
   title: "楷模实验室预约系统",
