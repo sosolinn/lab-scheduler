@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { getDatabase } from "../../../lib/database";
+import { readAuthContext } from "../../../lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -71,7 +72,15 @@ function validateBookingPayload(payload) {
   return { booking };
 }
 
-function mapBooking(row) {
+function canManageBooking(row, auth) {
+  if (!auth?.user) {
+    return false;
+  }
+  return Boolean(auth.isAdmin || (row.ownerId && row.ownerId === auth.user.id));
+}
+
+function mapBooking(row, auth) {
+  const isOwner = Boolean(auth?.user && row.ownerId === auth.user.id);
   return {
     id: row.id,
     name: row.name,
@@ -79,7 +88,10 @@ function mapBooking(row) {
     date: row.date,
     startTime: row.startTime,
     endTime: row.endTime,
-    purpose: row.purpose || ""
+    purpose: row.purpose || "",
+    isOwner,
+    canManage: canManageBooking(row, auth),
+    ownerBound: Boolean(row.ownerId)
   };
 }
 
@@ -97,14 +109,34 @@ async function ensureBookingsTable() {
           start_time time not null,
           end_time time not null,
           purpose text not null default '',
+          owner_id uuid,
+          owner_email text not null default '',
           created_at timestamptz not null default now(),
+          updated_at timestamptz not null default now(),
           constraint lab_bookings_valid_time check (end_time > start_time)
         )
       `;
 
       await sql`
+        alter table lab_bookings
+        add column if not exists owner_id uuid
+      `;
+      await sql`
+        alter table lab_bookings
+        add column if not exists owner_email text not null default ''
+      `;
+      await sql`
+        alter table lab_bookings
+        add column if not exists updated_at timestamptz not null default now()
+      `;
+
+      await sql`
         create index if not exists lab_bookings_date_bench_idx
         on lab_bookings (booking_date, bench, start_time)
+      `;
+      await sql`
+        create index if not exists lab_bookings_owner_idx
+        on lab_bookings (owner_id)
       `;
     })();
   }
@@ -118,7 +150,7 @@ async function ensureBookingsTable() {
 }
 
 async function selectBookings(sql) {
-  const rows = await sql`
+  return sql`
     select
       id,
       name,
@@ -126,19 +158,26 @@ async function selectBookings(sql) {
       booking_date::text as date,
       to_char(start_time, 'HH24:MI') as "startTime",
       to_char(end_time, 'HH24:MI') as "endTime",
-      purpose
+      purpose,
+      owner_id::text as "ownerId",
+      owner_email as "ownerEmail"
     from lab_bookings
     order by booking_date asc, start_time asc, created_at asc
   `;
-
-  return rows.map(mapBooking);
 }
 
-export async function GET() {
+export async function GET(request) {
   try {
     await ensureBookingsTable();
+    const authResult = await readAuthContext(request);
+    const auth = authResult.error ? { user: null, isAdmin: false } : authResult;
     const sql = getDatabase();
-    return json({ bookings: await selectBookings(sql) });
+    const rows = await selectBookings(sql);
+    return json({
+      bookings: rows.map((row) => mapBooking(row, auth)),
+      authenticated: Boolean(auth.user),
+      isAdmin: Boolean(auth.isAdmin)
+    });
   } catch (error) {
     console.error("读取预约数据库失败：", error);
     return json({ error: "无法连接预约数据库，请检查 DATABASE_URL。" }, 500);
@@ -148,6 +187,11 @@ export async function GET() {
 export async function POST(request) {
   try {
     await ensureBookingsTable();
+
+    const auth = await readAuthContext(request, { required: true });
+    if (auth.error) {
+      return json({ error: auth.error }, auth.status || 401);
+    }
 
     let payload;
     try {
@@ -172,6 +216,23 @@ export async function POST(request) {
         )
       `;
 
+      const existingRows = await transaction`
+        select
+          id,
+          owner_id::text as "ownerId",
+          owner_email as "ownerEmail"
+        from lab_bookings
+        where id = ${booking.id}
+        for update
+      `;
+      const existing = existingRows[0] || null;
+
+      if (existing && !canManageBooking(existing, auth)) {
+        const permissionError = new Error("你只能修改本人创建的预约。管理员可管理全部预约。");
+        permissionError.code = "BOOKING_FORBIDDEN";
+        throw permissionError;
+      }
+
       const conflicts = await transaction`
         select id
         from lab_bookings
@@ -189,48 +250,80 @@ export async function POST(request) {
         throw conflictError;
       }
 
-      const [row] = await transaction`
-        insert into lab_bookings (
-          id,
-          name,
-          bench,
-          booking_date,
-          start_time,
-          end_time,
-          purpose
-        ) values (
-          ${booking.id},
-          ${booking.name},
-          ${booking.bench},
-          ${booking.date}::date,
-          ${booking.startTime}::time,
-          ${booking.endTime}::time,
-          ${booking.purpose}
-        )
-        on conflict (id) do update set
-          name = excluded.name,
-          bench = excluded.bench,
-          booking_date = excluded.booking_date,
-          start_time = excluded.start_time,
-          end_time = excluded.end_time,
-          purpose = excluded.purpose
-        returning
-          id,
-          name,
-          bench,
-          booking_date::text as date,
-          to_char(start_time, 'HH24:MI') as "startTime",
-          to_char(end_time, 'HH24:MI') as "endTime",
-          purpose
-      `;
+      let rows;
+      if (existing) {
+        rows = await transaction`
+          update lab_bookings
+          set
+            name = ${booking.name},
+            bench = ${booking.bench},
+            booking_date = ${booking.date}::date,
+            start_time = ${booking.startTime}::time,
+            end_time = ${booking.endTime}::time,
+            purpose = ${booking.purpose},
+            updated_at = now()
+          where id = ${booking.id}
+          returning
+            id,
+            name,
+            bench,
+            booking_date::text as date,
+            to_char(start_time, 'HH24:MI') as "startTime",
+            to_char(end_time, 'HH24:MI') as "endTime",
+            purpose,
+            owner_id::text as "ownerId",
+            owner_email as "ownerEmail"
+        `;
+      } else {
+        rows = await transaction`
+          insert into lab_bookings (
+            id,
+            name,
+            bench,
+            booking_date,
+            start_time,
+            end_time,
+            purpose,
+            owner_id,
+            owner_email,
+            created_at,
+            updated_at
+          ) values (
+            ${booking.id},
+            ${booking.name},
+            ${booking.bench},
+            ${booking.date}::date,
+            ${booking.startTime}::time,
+            ${booking.endTime}::time,
+            ${booking.purpose},
+            ${auth.user.id}::uuid,
+            ${auth.user.email},
+            now(),
+            now()
+          )
+          returning
+            id,
+            name,
+            bench,
+            booking_date::text as date,
+            to_char(start_time, 'HH24:MI') as "startTime",
+            to_char(end_time, 'HH24:MI') as "endTime",
+            purpose,
+            owner_id::text as "ownerId",
+            owner_email as "ownerEmail"
+        `;
+      }
 
-      return mapBooking(row);
+      return mapBooking(rows[0], auth);
     });
 
-    return json({ booking: savedBooking }, 201);
+    return json({ booking: savedBooking }, 200);
   } catch (error) {
     if (error?.code === "BOOKING_CONFLICT") {
       return json({ error: error.message }, 409);
+    }
+    if (error?.code === "BOOKING_FORBIDDEN") {
+      return json({ error: error.message }, 403);
     }
 
     console.error("保存预约数据库失败：", error);
@@ -242,21 +335,38 @@ export async function DELETE(request) {
   try {
     await ensureBookingsTable();
 
+    const auth = await readAuthContext(request, { required: true });
+    if (auth.error) {
+      return json({ error: auth.error }, auth.status || 401);
+    }
+
     const id = normalizeText(new URL(request.url).searchParams.get("id"), 100);
     if (!id) {
       return json({ error: "缺少预约记录 ID。" }, 400);
     }
 
     const sql = getDatabase();
-    const deletedRows = await sql`
-      delete from lab_bookings
+    const rows = await sql`
+      select id, owner_id::text as "ownerId"
+      from lab_bookings
       where id = ${id}
-      returning id
     `;
+    const existing = rows[0];
 
-    if (deletedRows.length === 0) {
+    if (!existing) {
       return json({ error: "预约记录不存在或已被删除。" }, 404);
     }
+    if (!canManageBooking(existing, auth)) {
+      return json(
+        { error: "你只能删除本人创建的预约。管理员可删除全部预约。" },
+        403
+      );
+    }
+
+    await sql`
+      delete from lab_bookings
+      where id = ${id}
+    `;
 
     return json({ success: true });
   } catch (error) {

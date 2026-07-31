@@ -44,7 +44,7 @@ function applyDisplayTextReplacements(markup) {
     ],
     ['<p class="eyebrow">实验室公共设备管理</p>', ""],
     ["<h1>LabScheduler</h1>", "<h1>楷模实验室</h1>"],
-    ["<p>LabScheduler v1.3</p>", "<p>楷模实验室 v2.0</p>"],
+    ["<p>LabScheduler v1.3</p>", "<p>楷模实验室 v2.2</p>"],
     ["值班人员、完成进度与异常情况", "值日人员、完成进度与异常情况"],
     [
       "设置值日日期和值班人，并勾选已完成或状态正常的项目",
@@ -108,14 +108,17 @@ function getLegacyMarkup() {
 export default function HomePage() {
   const markup = getLegacyMarkup();
   const legacyScript = readProjectFile("script.js");
+  const authScript = readProjectFile("auth.js");
   const databaseBridge = readProjectFile("database-bridge.js");
   const dutyDatabaseBridge = readProjectFile("duty-database-bridge.js");
   const peoplePickerScript = readProjectFile("people-picker.js");
   const dutyPeopleScript = readProjectFile("duty-people.js");
   const bookingPeopleScript = readProjectFile("booking-people.js");
+  const peoplePickerControlScript = readProjectFile("people-picker-control.js");
   const dutyRulesScript = readProjectFile("duty-rules.js");
+  const bookingAuthRulesScript = readProjectFile("booking-auth-rules.js");
   const scriptSource = applyScriptTextReplacements(
-    `${legacyScript}\n\n${databaseBridge}\n\n${dutyDatabaseBridge}\n\n${peoplePickerScript}\n\n${dutyPeopleScript}\n\n${bookingPeopleScript}\n\n${dutyRulesScript}`
+    `${legacyScript}\n\n${authScript}\n\n${databaseBridge}\n\n${dutyDatabaseBridge}\n\n${peoplePickerScript}\n\n${dutyPeopleScript}\n\n${bookingPeopleScript}\n\n${peoplePickerControlScript}\n\n${dutyRulesScript}\n\n${bookingAuthRulesScript}`
   );
 
   return (

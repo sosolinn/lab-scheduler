@@ -12,13 +12,31 @@ async function __labReadResponseError(response, fallbackMessage) {
   }
 }
 
+async function __labBookingRequestHeaders(baseHeaders = {}) {
+  const authHeaders =
+    typeof window.__labGetAuthHeaders === "function"
+      ? await window.__labGetAuthHeaders()
+      : {};
+  return { ...baseHeaders, ...authHeaders };
+}
+
+function __labBookingSignature(booking) {
+  return JSON.stringify({
+    id: booking?.id || "",
+    name: booking?.name || "",
+    bench: booking?.bench || "",
+    date: booking?.date || "",
+    startTime: booking?.startTime || "",
+    endTime: booking?.endTime || "",
+    purpose: booking?.purpose || ""
+  });
+}
+
 async function __labFetchDatabaseBookings() {
   const response = await fetch(__LAB_BOOKINGS_API_ENDPOINT, {
     method: "GET",
     cache: "no-store",
-    headers: {
-      Accept: "application/json"
-    }
+    headers: await __labBookingRequestHeaders({ Accept: "application/json" })
   });
 
   if (!response.ok) {
@@ -47,16 +65,19 @@ async function __labRefreshBookingsFromDatabase() {
 async function __labCreateDatabaseBooking(booking) {
   const response = await fetch(__LAB_BOOKINGS_API_ENDPOINT, {
     method: "POST",
-    headers: {
+    headers: await __labBookingRequestHeaders({
       "Content-Type": "application/json",
       Accept: "application/json"
-    },
+    }),
     body: JSON.stringify(booking)
   });
 
   if (!response.ok) {
     throw new Error(await __labReadResponseError(response, "预约保存失败。"));
   }
+
+  const payload = await response.json();
+  return payload.booking || null;
 }
 
 async function __labDeleteDatabaseBooking(id) {
@@ -64,9 +85,7 @@ async function __labDeleteDatabaseBooking(id) {
     `${__LAB_BOOKINGS_API_ENDPOINT}?id=${encodeURIComponent(id)}`,
     {
       method: "DELETE",
-      headers: {
-        Accept: "application/json"
-      }
+      headers: await __labBookingRequestHeaders({ Accept: "application/json" })
     }
   );
 
@@ -75,8 +94,8 @@ async function __labDeleteDatabaseBooking(id) {
   }
 }
 
-async function __labApplyBookingChanges(addedBookings, removedBookings) {
-  for (const booking of addedBookings) {
+async function __labApplyBookingChanges(changedBookings, removedBookings) {
+  for (const booking of changedBookings) {
     await __labCreateDatabaseBooking(booking);
   }
 
@@ -96,19 +115,24 @@ saveData = function saveDataWithDatabaseSync(key, data) {
 
   const nextBookings = normalizeBookings(data).map((booking) => ({ ...booking }));
   const previousBookings = __labSyncedBookings;
-  const previousIds = new Set(previousBookings.map((booking) => booking.id));
+  const previousById = new Map(previousBookings.map((booking) => [booking.id, booking]));
   const nextIds = new Set(nextBookings.map((booking) => booking.id));
-  const addedBookings = nextBookings.filter((booking) => !previousIds.has(booking.id));
-  const removedBookings = previousBookings.filter((booking) => !nextIds.has(booking.id));
+  const changedBookings = nextBookings.filter((booking) => {
+    const previous = previousById.get(booking.id);
+    return !previous || __labBookingSignature(previous) !== __labBookingSignature(booking);
+  });
+  const removedBookings = previousBookings.filter(
+    (booking) => !nextIds.has(booking.id)
+  );
 
   __labSyncedBookings = nextBookings;
 
-  if (addedBookings.length === 0 && removedBookings.length === 0) {
+  if (changedBookings.length === 0 && removedBookings.length === 0) {
     return;
   }
 
   __labBookingSyncQueue = __labBookingSyncQueue
-    .then(() => __labApplyBookingChanges(addedBookings, removedBookings))
+    .then(() => __labApplyBookingChanges(changedBookings, removedBookings))
     .catch(async (error) => {
       console.error("同步预约数据库失败：", error);
 
@@ -140,6 +164,7 @@ function __labQueueDatabaseRefresh() {
 }
 
 window.addEventListener("focus", __labQueueDatabaseRefresh);
+window.addEventListener("lab:auth-changed", __labQueueDatabaseRefresh);
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
     __labQueueDatabaseRefresh();
