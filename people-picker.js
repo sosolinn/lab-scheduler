@@ -125,7 +125,7 @@ window.__createLabPeoplePicker = function createLabPeoplePicker(config) {
       <button type="button" class="lab-create-option" hidden></button>
       <p class="lab-options-empty" hidden>${escapeHtml(emptyText || `暂无${labelText}选项`)}</p>
     </div>
-    <p class="duty-people-help ${type}-people-help">点击后可搜索和多选；输入新姓名并按 Enter 可创建。标签“×”仅取消本次选择，下拉列表右侧删除键会从共享名单中移除人员。</p>
+    <p class="duty-people-help ${type}-people-help">点击后可搜索和多选；输入新姓名并按加号可添加新成员。标签“×”仅取消本次选择，下拉列表右侧删除键会从名单中移除人员。</p>
   `;
   hiddenInput.insertAdjacentElement("afterend", picker);
 
