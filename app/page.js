@@ -301,11 +301,12 @@ export default function HomePage() {
   const dutyPeopleScript = readProjectFile("duty-people.js");
   const bookingPeopleScript = readProjectFile("booking-people.js");
   const peoplePickerControlScript = readProjectFile("people-picker-control.js");
+  const dutyAuthRulesScript = readProjectFile("duty-auth-rules.js");
   const dutyRulesScript = readProjectFile("duty-rules.js");
   const bookingAuthRulesScript = readProjectFile("booking-auth-rules.js");
   const settingsAccountScript = readProjectFile("settings-account.js");
   const scriptSource = applyScriptTextReplacements(
-    `${legacyScript}\n\n${authScript}\n\n${databaseBridge}\n\n${dutyDatabaseBridge}\n\n${peoplePickerScript}\n\n${dutyPeopleScript}\n\n${bookingPeopleScript}\n\n${peoplePickerControlScript}\n\n${dutyRulesScript}\n\n${bookingAuthRulesScript}\n\n${settingsAccountScript}`
+    `${legacyScript}\n\n${authScript}\n\n${databaseBridge}\n\n${dutyDatabaseBridge}\n\n${peoplePickerScript}\n\n${dutyPeopleScript}\n\n${bookingPeopleScript}\n\n${peoplePickerControlScript}\n\n${dutyAuthRulesScript}\n\n${dutyRulesScript}\n\n${bookingAuthRulesScript}\n\n${settingsAccountScript}`
   );
 
   return (
