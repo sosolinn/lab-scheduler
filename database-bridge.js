@@ -2,6 +2,7 @@ const __LAB_BOOKINGS_API_ENDPOINT = "/api/bookings";
 const __labOriginalSaveData = saveData;
 let __labSyncedBookings = normalizeBookings(bookings).map((booking) => ({ ...booking }));
 let __labBookingSyncQueue = Promise.resolve();
+let __labBookingDatabaseWarningShown = false;
 
 async function __labReadResponseError(response, fallbackMessage) {
   try {
@@ -32,6 +33,21 @@ function __labBookingSignature(booking) {
   });
 }
 
+function __labReportBookingDatabaseUnavailable(error, context) {
+  const message = error?.message || "预约数据库暂时不可用。";
+
+  if (!__labBookingDatabaseWarningShown) {
+    console.warn(`${context}：${message}`);
+    __labBookingDatabaseWarningShown = true;
+  }
+
+  return message;
+}
+
+function __labMarkBookingDatabaseAvailable() {
+  __labBookingDatabaseWarningShown = false;
+}
+
 async function __labFetchDatabaseBookings() {
   const response = await fetch(__LAB_BOOKINGS_API_ENDPOINT, {
     method: "GET",
@@ -40,9 +56,11 @@ async function __labFetchDatabaseBookings() {
   });
 
   if (!response.ok) {
-    throw new Error(
+    const error = new Error(
       await __labReadResponseError(response, "无法读取数据库中的预约记录。")
     );
+    error.status = response.status;
+    throw error;
   }
 
   const payload = await response.json();
@@ -51,6 +69,7 @@ async function __labFetchDatabaseBookings() {
 
 async function __labRefreshBookingsFromDatabase() {
   const databaseBookings = await __labFetchDatabaseBookings();
+  __labMarkBookingDatabaseAvailable();
   bookings = databaseBookings;
   __labSyncedBookings = databaseBookings.map((booking) => ({ ...booking }));
   __labOriginalSaveData(BOOKING_STORAGE_KEY, databaseBookings);
@@ -133,18 +152,15 @@ saveData = function saveDataWithDatabaseSync(key, data) {
 
   __labBookingSyncQueue = __labBookingSyncQueue
     .then(() => __labApplyBookingChanges(changedBookings, removedBookings))
-    .catch(async (error) => {
-      console.error("同步预约数据库失败：", error);
-
-      try {
-        await __labRefreshBookingsFromDatabase();
-      } catch (refreshError) {
-        console.error("重新读取预约数据库失败：", refreshError);
-      }
+    .catch((error) => {
+      const message = __labReportBookingDatabaseUnavailable(
+        error,
+        "同步预约数据库失败"
+      );
 
       showFormMessage(
         bookingMessage,
-        error.message || "数据库同步失败，请检查连接后重试。",
+        `${message} 本次修改已暂存在当前浏览器，数据库恢复后请重新保存。`,
         "error"
       );
     });
@@ -154,10 +170,16 @@ function __labQueueDatabaseRefresh() {
   __labBookingSyncQueue = __labBookingSyncQueue
     .then(() => __labRefreshBookingsFromDatabase())
     .catch((error) => {
-      console.error("刷新预约数据库失败：", error);
+      const message = __labReportBookingDatabaseUnavailable(
+        error,
+        "刷新预约数据库失败"
+      );
+
       showFormMessage(
         bookingMessage,
-        error.message || "无法连接预约数据库，请检查 DATABASE_URL。",
+        message.includes("DATABASE_URL")
+          ? "预约数据库尚未配置，当前显示本机临时数据。请在 .env.local 或部署平台配置 DATABASE_URL 后重启应用。"
+          : `${message} 当前继续显示本机已保存的预约。`,
         "error"
       );
     });
