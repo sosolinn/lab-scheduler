@@ -110,7 +110,7 @@ window.__createLabPeoplePicker = function createLabPeoplePicker(config) {
         </button>
       </div>
     </div>
-    <p class="duty-people-help ${type}-people-help">点击姓名可选择或取消；输入新姓名后点击“增加人员”。需要移除名单时，先选中人员，再点击“删除人员”。人员名单会同步到数据库。</p>
+    <p class="duty-people-help ${type}-people-help">点击姓名可选择或取消；输入新姓名后点击“增加人员”。需要移除名单时，先选中人员，再点击“删除人员”。</p>
   `;
   hiddenInput.insertAdjacentElement("afterend", picker);
 
