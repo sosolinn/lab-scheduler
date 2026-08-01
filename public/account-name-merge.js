@@ -1,5 +1,30 @@
 (() => {
+  function setMessage(message, type = "") {
+    const element = document.querySelector("#settingsUsersMessage");
+    if (!element) return;
+    element.textContent = message;
+    element.className = `settings-message${type ? ` ${type}` : ""}`;
+  }
+
+  function mergeLoginUi() {
+    const loginInput = document.querySelector("#labAuthUsername");
+    if (!loginInput) return;
+
+    const loginLabel = loginInput.closest(".auth-field")?.querySelector("span");
+    if (loginLabel) {
+      loginLabel.textContent = "账户名称";
+    }
+    loginInput.placeholder = "请输入姓名";
+
+    const headingNote = document.querySelector(".auth-dialog-heading p");
+    if (headingNote) {
+      headingNote.textContent = "使用管理员创建的姓名和密码登录。";
+    }
+  }
+
   function mergeAccountNameUi() {
+    mergeLoginUi();
+
     const accountNameValue = document.querySelector("#settingsAccountUsername");
     const accountNameRow = accountNameValue?.closest(".settings-detail-row");
     const accountNameLabel = accountNameRow?.querySelector("dt");
@@ -45,9 +70,22 @@
       createUserForm.dataset.accountNameMerged = "true";
       createUserForm.addEventListener(
         "submit",
-        () => {
-          if (usernameInput && displayNameInput) {
-            displayNameInput.value = usernameInput.value.trim();
+        (event) => {
+          const accountName = usernameInput?.value.trim() || "";
+          const password =
+            document.querySelector("#settingsTemporaryPassword")?.value || "";
+
+          if (displayNameInput) {
+            displayNameInput.value = accountName;
+          }
+
+          if (!accountName || password.length < 8) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            setMessage(
+              "请填写成员姓名和至少 8 位临时密码。",
+              "error"
+            );
           }
         },
         true
