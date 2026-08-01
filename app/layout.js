@@ -26,6 +26,7 @@ export default function RootLayout({ children }) {
       <body>
         {children}
         <Script src="/account-name-merge.js" strategy="afterInteractive" />
+        <Script src="/interface-cleanup.js" strategy="afterInteractive" />
       </body>
     </html>
   );
