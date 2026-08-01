@@ -18,7 +18,7 @@ if (__labBookingSubmitButton) {
 
   const note = document.createElement("p");
   note.className = "booking-auth-required-note";
-  note.textContent = "登录用户只能修改和删除本人预约；管理员可管理全部预约。";
+  note.textContent = "登录用户只能修改和删除本人预约。";
   __labBookingActionRow.insertAdjacentElement("afterend", note);
 }
 

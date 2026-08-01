@@ -151,7 +151,7 @@ const SETTINGS_PAGE_MARKUP = `
               <div class="card-heading">
                 <div>
                   <h3>成员账户管理</h3>
-                  <p>仅管理员可创建、停用、重置密码和调整角色</p>
+                  <p>仅管理员可创建和重置密码</p>
                 </div>
                 <button
                   type="button"
@@ -276,7 +276,7 @@ function applyDisplayTextReplacements(markup) {
     ["值班人员、完成进度与异常情况", "值日人员、完成进度与异常情况"],
     [
       "设置值日日期和值班人，并勾选已完成或状态正常的项目",
-      "设置值日日期和值日人，并勾选已完成或状态正常的项目"
+      "设置值日人，并勾选已完成或状态正常的项目"
     ],
     [
       '<label for="dutyName">值班人</label>',
@@ -318,7 +318,7 @@ function ensureSettingsPageTitle(scriptSource) {
   }
 
   return scriptSource.replace(
-    /(const pageTitles = \{[\s\S]*?duty:\s*"值日排班")(\s*\};)/,
+    /(const pageTitles = \{[\s\S]*?duty:\s*"值日管理")(\s*\};)/,
     '$1,\n  settings: "设置"$2'
   );
 }

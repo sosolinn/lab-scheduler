@@ -60,7 +60,7 @@ saveData(DUTY_STORAGE_KEY, duties);
 const pageTitles = {
   dashboard: "工作台",
   booking: "超净台预约",
-  duty: "值日排班"
+  duty: "值日管理"
 };
 
 const navItems = document.querySelectorAll(".nav-item");
