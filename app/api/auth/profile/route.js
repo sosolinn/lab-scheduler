@@ -1,7 +1,4 @@
-import {
-  readAuthContext,
-  updateOwnProfile
-} from "../../../../lib/auth";
+import { readAuthContext } from "../../../../lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,21 +12,13 @@ export async function PUT(request) {
     );
   }
 
-  try {
-    const payload = await request.json();
-    const user = await updateOwnProfile(
-      auth.user.id,
-      payload?.displayName
-    );
-
-    return Response.json(
-      { user },
-      { headers: { "Cache-Control": "no-store" } }
-    );
-  } catch (error) {
-    return Response.json(
-      { error: error.message || "账户资料更新失败。" },
-      { status: 400, headers: { "Cache-Control": "no-store" } }
-    );
-  }
+  return Response.json(
+    {
+      error: "账户名称同时作为登录名和显示姓名，由管理员创建后不能自行修改。"
+    },
+    {
+      status: 405,
+      headers: { "Cache-Control": "no-store" }
+    }
+  );
 }
