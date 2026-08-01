@@ -3,7 +3,7 @@ const __labDutyAuthSubmitButton = dutyForm.querySelector('button[type="submit"]'
 if (__labDutyAuthSubmitButton) {
   const note = document.createElement("p");
   note.className = "booking-auth-required-note";
-  note.textContent = "登录后方可提交或覆盖当日值日记录；所有人仍可查看历史值日情况。";
+  note.textContent = "当天提交的新记录会覆盖旧记录。";
   __labDutyAuthSubmitButton.insertAdjacentElement("afterend", note);
 }
 
