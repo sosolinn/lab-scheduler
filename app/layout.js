@@ -1,3 +1,5 @@
+import Script from "next/script";
+
 import "../style.css";
 import "./mobile.css";
 import "./mobile-containment.css";
@@ -21,7 +23,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="zh-CN">
-      <body>{children}</body>
+      <body>
+        {children}
+        <Script src="/account-name-merge.js" strategy="afterInteractive" />
+      </body>
     </html>
   );
 }
