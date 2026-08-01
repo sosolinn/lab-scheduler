@@ -6,6 +6,7 @@ import "./mobile-containment.css";
 import "./duty-people.css";
 import "./compact-header.css";
 import "./duty-record-rules.css";
+import "./duty-month-view.css";
 import "./auth.css";
 import "./auth-overrides.css";
 import "./settings.css";
@@ -27,6 +28,7 @@ export default function RootLayout({ children }) {
         {children}
         <Script src="/account-name-merge.js" strategy="afterInteractive" />
         <Script src="/interface-cleanup.js" strategy="afterInteractive" />
+        <Script src="/duty-month-view.js" strategy="afterInteractive" />
       </body>
     </html>
   );
