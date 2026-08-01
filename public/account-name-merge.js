@@ -1,8 +1,14 @@
 (() => {
+  function setText(element, value) {
+    if (element && element.textContent !== value) {
+      element.textContent = value;
+    }
+  }
+
   function setMessage(message, type = "") {
     const element = document.querySelector("#settingsUsersMessage");
     if (!element) return;
-    element.textContent = message;
+    setText(element, message);
     element.className = `settings-message${type ? ` ${type}` : ""}`;
   }
 
@@ -11,15 +17,13 @@
     if (!loginInput) return;
 
     const loginLabel = loginInput.closest(".auth-field")?.querySelector("span");
-    if (loginLabel) {
-      loginLabel.textContent = "账户名称";
+    setText(loginLabel, "账户名称");
+    if (loginInput.placeholder !== "请输入姓名") {
+      loginInput.placeholder = "请输入姓名";
     }
-    loginInput.placeholder = "请输入姓名";
 
     const headingNote = document.querySelector(".auth-dialog-heading p");
-    if (headingNote) {
-      headingNote.textContent = "使用管理员创建的姓名和密码登录。";
-    }
+    setText(headingNote, "使用管理员创建的姓名和密码登录。");
   }
 
   function mergeAccountNameUi() {
@@ -28,13 +32,11 @@
     const accountNameValue = document.querySelector("#settingsAccountUsername");
     const accountNameRow = accountNameValue?.closest(".settings-detail-row");
     const accountNameLabel = accountNameRow?.querySelector("dt");
-    if (accountNameLabel) {
-      accountNameLabel.textContent = "账户名称";
-    }
+    setText(accountNameLabel, "账户名称");
 
     const profileForm = document.querySelector("#settingsProfileForm");
     const profileCard = profileForm?.closest(".settings-form-card");
-    if (profileCard) {
+    if (profileCard && !profileCard.hidden) {
       profileCard.hidden = true;
     }
 
@@ -50,16 +52,16 @@
       const usernameLabel = usernameInput
         .closest(".form-group")
         ?.querySelector("label");
-      if (usernameLabel) {
-        usernameLabel.textContent = "成员姓名（同时作为登录名）";
+      setText(usernameLabel, "成员姓名（同时作为登录名）");
+      if (usernameInput.placeholder !== "例如：小明") {
+        usernameInput.placeholder = "例如：小明";
       }
-      usernameInput.placeholder = "例如：小明";
       usernameInput.setAttribute("autocomplete", "off");
     }
 
     if (displayNameInput) {
       const displayNameGroup = displayNameInput.closest(".form-group");
-      if (displayNameGroup) {
+      if (displayNameGroup && !displayNameGroup.hidden) {
         displayNameGroup.hidden = true;
       }
       displayNameInput.tabIndex = -1;
@@ -105,9 +107,7 @@
         .replace(/^用户名：\s*/, "")
         .trim();
       const title = row.querySelector(".settings-user-title strong");
-      if (title && accountName) {
-        title.textContent = accountName;
-      }
+      setText(title, accountName);
       usernameLine.remove();
     });
   }
