@@ -4,7 +4,6 @@ import { getDatabase } from "../../../../lib/database";
 import {
   ensureAuthSchema,
   hashPassword,
-  normalizeDisplayName,
   requireAdministrator,
   validatePassword,
   validateUsername
@@ -24,7 +23,7 @@ function mapUser(row) {
   return {
     id: String(row.id),
     username: row.username,
-    displayName: row.displayName,
+    displayName: row.username,
     role: row.role,
     status: row.status,
     mustChangePassword: Boolean(row.mustChangePassword),
@@ -83,7 +82,6 @@ export async function POST(request) {
     const payload = await request.json();
     const usernameValidation = validateUsername(payload?.username);
     const passwordValidation = validatePassword(payload?.password);
-    const displayName = normalizeDisplayName(payload?.displayName);
     const role = payload?.role === "admin" ? "admin" : "user";
 
     if (usernameValidation.error) {
@@ -92,10 +90,8 @@ export async function POST(request) {
     if (passwordValidation.error) {
       return json({ error: passwordValidation.error }, 400);
     }
-    if (!displayName) {
-      return json({ error: "显示姓名不能为空。" }, 400);
-    }
 
+    const accountName = usernameValidation.username;
     const passwordHash = await hashPassword(passwordValidation.password);
     const sql = getDatabase();
     const rows = await sql`
@@ -111,8 +107,8 @@ export async function POST(request) {
         updated_at
       ) values (
         ${randomUUID()}::uuid,
-        ${usernameValidation.username},
-        ${displayName},
+        ${accountName},
+        ${accountName},
         ${passwordHash},
         ${role},
         'active',
@@ -134,7 +130,7 @@ export async function POST(request) {
     return json({ user: mapUser(rows[0]) }, 201);
   } catch (error) {
     if (error?.code === "23505") {
-      return json({ error: "该用户名已经存在。" }, 409);
+      return json({ error: "该成员姓名已经存在。" }, 409);
     }
     console.error("创建实验室账户失败：", error);
     return json({ error: "账户创建失败，请检查数据库连接。" }, 500);
