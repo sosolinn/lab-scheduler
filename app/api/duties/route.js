@@ -1,6 +1,9 @@
 import { randomUUID } from "node:crypto";
 
-import { getDatabase } from "../../../lib/database";
+import {
+  getDatabase,
+  withDatabaseReadRetry
+} from "../../../lib/database";
 import { readAuthContext } from "../../../lib/auth";
 
 export const runtime = "nodejs";
@@ -237,12 +240,22 @@ async function selectDuties(sql) {
 
 export async function GET() {
   try {
-    await ensureDutiesTable();
-    const sql = getDatabase();
-    return json({ duties: await selectDuties(sql) });
+    return await withDatabaseReadRetry(async () => {
+      await ensureDutiesTable();
+      const sql = getDatabase();
+      return json({ duties: await selectDuties(sql) });
+    });
   } catch (error) {
     console.error("读取值日数据库失败：", error);
-    return json({ error: "无法读取值日记录，请检查数据库连接。" }, 500);
+    return json(
+      {
+        error:
+          error?.code === "CONNECT_TIMEOUT"
+            ? "数据库连接超时，请稍后刷新重试。"
+            : "无法读取值日记录，请检查数据库连接。"
+      },
+      500
+    );
   }
 }
 

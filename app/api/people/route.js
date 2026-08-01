@@ -1,4 +1,7 @@
-import { getDatabase } from "../../../lib/database";
+import {
+  getDatabase,
+  withDatabaseReadRetry
+} from "../../../lib/database";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -65,25 +68,35 @@ async function ensurePeopleTable() {
 
 export async function GET(request) {
   try {
-    await ensurePeopleTable();
+    return await withDatabaseReadRetry(async () => {
+      await ensurePeopleTable();
 
-    const type = normalizeType(new URL(request.url).searchParams.get("type"));
-    if (!type) {
-      return json({ error: "人员类型不正确。" }, 400);
-    }
+      const type = normalizeType(new URL(request.url).searchParams.get("type"));
+      if (!type) {
+        return json({ error: "人员类型不正确。" }, 400);
+      }
 
-    const sql = getDatabase();
-    const rows = await sql`
-      select name
-      from lab_people
-      where person_type = ${type}
-      order by created_at asc, id asc
-    `;
+      const sql = getDatabase();
+      const rows = await sql`
+        select name
+        from lab_people
+        where person_type = ${type}
+        order by created_at asc, id asc
+      `;
 
-    return json({ people: rows.map((row) => row.name) });
+      return json({ people: rows.map((row) => row.name) });
+    });
   } catch (error) {
     console.error("读取人员数据库失败：", error);
-    return json({ error: "无法读取人员名单，请检查数据库连接。" }, 500);
+    return json(
+      {
+        error:
+          error?.code === "CONNECT_TIMEOUT"
+            ? "数据库连接超时，请稍后刷新重试。"
+            : "无法读取人员名单，请检查数据库连接。"
+      },
+      500
+    );
   }
 }
 
