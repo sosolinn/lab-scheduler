@@ -335,6 +335,17 @@ function __labSettingsRenderUsers(users) {
               data-user-id="${id}"
               data-user-active="${disabled ? "true" : "false"}"
             >${disabled ? "启用" : "停用"}</button>
+            ${
+              isAdmin
+                ? ""
+                : `<button
+                    type="button"
+                    class="settings-small-button danger"
+                    data-user-action="delete-user"
+                    data-user-id="${id}"
+                    data-user-name="${username}"
+                  >删除</button>`
+            }
           </div>
         </div>
       `;
@@ -429,6 +440,7 @@ async function __labSettingsHandleUserAction(event) {
   const action = button.dataset.userAction;
   const id = button.dataset.userId;
   const body = { id };
+  let successMessage = "账户设置已更新。";
 
   if (action === "reset-password") {
     const password = window.prompt(
@@ -471,6 +483,17 @@ async function __labSettingsHandleUserAction(event) {
     }
     body.action = "setRole";
     body.role = role;
+  } else if (action === "delete-user") {
+    const accountName = button.dataset.userName || "该普通用户";
+    if (
+      !window.confirm(
+        `确定永久删除普通用户“${accountName}”吗？删除后该用户将无法登录，且此操作不能撤销；已有预约和值日历史记录会继续保留。`
+      )
+    ) {
+      return;
+    }
+    body.action = "deleteUser";
+    successMessage = `普通用户“${accountName}”已删除。`;
   } else {
     return;
   }
@@ -484,7 +507,7 @@ async function __labSettingsHandleUserAction(event) {
     });
     __labSettingsSetMessage(
       "#settingsUsersMessage",
-      "账户设置已更新。",
+      successMessage,
       "success"
     );
     await __labSettingsLoadUsers();
