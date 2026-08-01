@@ -45,7 +45,7 @@
 
   .nav-menu {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 6px;
     overflow: visible;
   }
@@ -54,18 +54,18 @@
     min-width: 0;
     min-height: 46px;
     justify-content: center;
-    gap: 4px;
-    padding: 9px 3px;
-    font-size: 12px;
+    gap: 3px;
+    padding: 9px 2px;
+    font-size: 11px;
     line-height: 1.2;
     text-align: center;
     white-space: nowrap;
   }
 
   .nav-item span {
-    width: 15px;
-    flex: 0 0 15px;
-    font-size: 14px;
+    width: 14px;
+    flex: 0 0 14px;
+    font-size: 13px;
   }
 
   .weekly-booking-card {
@@ -182,19 +182,19 @@
   }
 
   .nav-menu {
-    gap: 4px;
+    gap: 3px;
   }
 
   .nav-item {
-    gap: 3px;
-    padding-inline: 2px;
-    font-size: 11px;
+    gap: 2px;
+    padding-inline: 1px;
+    font-size: 10px;
   }
 
   .nav-item span {
-    width: 13px;
-    flex-basis: 13px;
-    font-size: 13px;
+    width: 12px;
+    flex-basis: 12px;
+    font-size: 12px;
   }
 
   .weekly-booking-card {
