@@ -20,10 +20,16 @@ export async function GET(request) {
     );
   }
 
+  const accountUser = {
+    ...auth.user,
+    email: auth.user.username,
+    displayName: auth.user.username
+  };
+
   return Response.json(
     {
       authenticated: true,
-      user: auth.user,
+      user: accountUser,
       isAdmin: auth.isAdmin
     },
     { headers: { "Cache-Control": "no-store" } }
