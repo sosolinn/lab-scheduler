@@ -154,7 +154,7 @@ export async function PATCH(request) {
 
     const sql = getDatabase();
     const rows = await sql`
-      select id, role, status
+      select id, username, role, status
       from lab_users
       where id = ${id}::uuid
       limit 1
@@ -230,6 +230,19 @@ export async function PATCH(request) {
         update lab_users
         set role = ${role}, updated_at = now()
         where id = ${id}::uuid
+      `;
+    } else if (action === "deleteUser") {
+      if (id === auth.user.id) {
+        return json({ error: "不能删除当前登录的管理员账户。" }, 400);
+      }
+      if (target.role !== "user") {
+        return json({ error: "仅允许删除普通用户；管理员账户需要先调整为普通用户。" }, 400);
+      }
+
+      await sql`
+        delete from lab_users
+        where id = ${id}::uuid
+          and role = 'user'
       `;
     } else {
       return json({ error: "不支持的账户操作。" }, 400);
