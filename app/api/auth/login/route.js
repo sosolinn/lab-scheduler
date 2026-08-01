@@ -26,17 +26,23 @@ export async function POST(request) {
 
     if (!user) {
       return Response.json(
-        { error: "用户名或密码不正确，或账户已被停用。" },
+        { error: "账户名称或密码不正确，或账户已被停用。" },
         { status: 401, headers: { "Cache-Control": "no-store" } }
       );
     }
 
-    const token = await createSession(user.id);
+    const accountUser = {
+      ...user,
+      email: user.username,
+      displayName: user.username
+    };
+    const token = await createSession(accountUser.id);
+
     return Response.json(
       {
         authenticated: true,
-        user,
-        isAdmin: user.role === "admin"
+        user: accountUser,
+        isAdmin: accountUser.role === "admin"
       },
       {
         headers: {
@@ -46,7 +52,7 @@ export async function POST(request) {
       }
     );
   } catch (error) {
-    console.error("用户名登录失败：", error);
+    console.error("账户名称登录失败：", error);
     return Response.json(
       {
         error:
