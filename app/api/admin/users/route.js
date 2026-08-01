@@ -239,11 +239,28 @@ export async function PATCH(request) {
         return json({ error: "仅允许删除普通用户；管理员账户需要先调整为普通用户。" }, 400);
       }
 
-      await sql`
-        delete from lab_users
-        where id = ${id}::uuid
-          and role = 'user'
-      `;
+      const normalizedName = String(target.username || "")
+        .trim()
+        .toLocaleLowerCase("zh-CN");
+
+      await sql.begin(async (transaction) => {
+        const peopleTableRows = await transaction`
+          select to_regclass('public.lab_people')::text as "tableName"
+        `;
+
+        if (peopleTableRows[0]?.tableName && normalizedName) {
+          await transaction`
+            delete from lab_people
+            where normalized_name = ${normalizedName}
+          `;
+        }
+
+        await transaction`
+          delete from lab_users
+          where id = ${id}::uuid
+            and role = 'user'
+        `;
+      });
     } else {
       return json({ error: "不支持的账户操作。" }, 400);
     }
