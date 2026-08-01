@@ -227,7 +227,7 @@ function __labAuthCreateUi() {
             >登录</button>
           </div>
         </form>
-        <p class="auth-dialog-note">账户由实验室管理员创建；系统不再依赖邮箱验证。</p>
+        <p class="auth-dialog-note">账户由实验室管理员创建。</p>
       </section>
     </div>`
   );

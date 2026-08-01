@@ -345,7 +345,7 @@ bookingForm.addEventListener("submit", (event) => {
   visibleWeekStart = getStartOfWeek(parseDateString(booking.date));
   bookingForm.reset();
   bookingDateInput.value = getTodayString();
-  showFormMessage(bookingMessage, "预约保存成功，已显示在右侧周预约表中。", "success");
+  showFormMessage(bookingMessage, "预约保存成功", "success");
   renderAll();
 });
 
