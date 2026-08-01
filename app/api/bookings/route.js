@@ -1,6 +1,9 @@
 import { randomUUID } from "node:crypto";
 
-import { getDatabase } from "../../../lib/database";
+import {
+  getDatabase,
+  withDatabaseReadRetry
+} from "../../../lib/database";
 import { readAuthContext } from "../../../lib/auth";
 
 export const runtime = "nodejs";
@@ -168,19 +171,29 @@ async function selectBookings(sql) {
 
 export async function GET(request) {
   try {
-    await ensureBookingsTable();
-    const authResult = await readAuthContext(request);
-    const auth = authResult.error ? { user: null, isAdmin: false } : authResult;
-    const sql = getDatabase();
-    const rows = await selectBookings(sql);
-    return json({
-      bookings: rows.map((row) => mapBooking(row, auth)),
-      authenticated: Boolean(auth.user),
-      isAdmin: Boolean(auth.isAdmin)
+    return await withDatabaseReadRetry(async () => {
+      await ensureBookingsTable();
+      const authResult = await readAuthContext(request);
+      const auth = authResult.error ? { user: null, isAdmin: false } : authResult;
+      const sql = getDatabase();
+      const rows = await selectBookings(sql);
+      return json({
+        bookings: rows.map((row) => mapBooking(row, auth)),
+        authenticated: Boolean(auth.user),
+        isAdmin: Boolean(auth.isAdmin)
+      });
     });
   } catch (error) {
     console.error("读取预约数据库失败：", error);
-    return json({ error: "无法连接预约数据库，请检查 DATABASE_URL。" }, 500);
+    return json(
+      {
+        error:
+          error?.code === "CONNECT_TIMEOUT"
+            ? "数据库连接超时，请稍后刷新重试。"
+            : "无法连接预约数据库，请检查 DATABASE_URL。"
+      },
+      500
+    );
   }
 }
 
