@@ -4,6 +4,8 @@
   .auth-account-button,
   .auth-dialog button,
   .primary-button,
+  .welcome-action-button,
+  .summary-link-button,
   .settings-secondary-button,
   .settings-danger-button {
     touch-action: manipulation;
@@ -22,5 +24,33 @@
 
   body.auth-modal-open .auth-modal:not([hidden]) {
     pointer-events: auto;
+  }
+}
+
+@media (max-width: 720px) and (hover: none) and (pointer: coarse) {
+  .nav-item:not(.active):hover {
+    color: #d1d5db;
+    background: transparent;
+  }
+
+  .nav-item.active:hover {
+    color: #fff;
+    background: var(--primary);
+  }
+
+  .welcome-action-button:hover,
+  .summary-link-button:hover,
+  .primary-button:hover {
+    transform: none;
+  }
+
+  .nav-item:active,
+  [data-go-page]:active,
+  .auth-account-button:active,
+  .auth-dialog button:active,
+  .primary-button:active,
+  .welcome-action-button:active,
+  .summary-link-button:active {
+    transform: scale(0.98);
   }
 }
