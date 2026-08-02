@@ -248,8 +248,33 @@
     display: none;
   }
 
+  .auth-modal {
+    width: 100vw;
+    height: 100dvh;
+    max-width: 100vw;
+    max-height: 100dvh;
+    padding: 12px;
+    overflow: hidden;
+    overscroll-behavior: contain;
+  }
+
   .auth-dialog {
+    width: min(440px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px);
     padding: 22px 18px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .auth-field input {
+    font-size: 16px;
+  }
+
+  .auth-dialog button {
+    touch-action: manipulation;
   }
 }
 
