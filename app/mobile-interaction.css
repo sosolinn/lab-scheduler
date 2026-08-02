@@ -1,0 +1,26 @@
+@media (max-width: 720px) {
+  .nav-item,
+  [data-go-page],
+  .auth-account-button,
+  .auth-dialog button,
+  .primary-button,
+  .settings-secondary-button,
+  .settings-danger-button {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(37, 99, 235, 0.14);
+  }
+
+  .nav-item {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .auth-modal[hidden],
+  body:not(.auth-modal-open) .auth-modal {
+    pointer-events: none;
+  }
+
+  body.auth-modal-open .auth-modal:not([hidden]) {
+    pointer-events: auto;
+  }
+}
