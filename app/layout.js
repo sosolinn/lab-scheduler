@@ -3,6 +3,7 @@ import Script from "next/script";
 import "../style.css";
 import "./mobile.css";
 import "./mobile-containment.css";
+import "./mobile-interaction.css";
 import "./duty-people.css";
 import "./compact-header.css";
 import "./duty-record-rules.css";
@@ -30,6 +31,7 @@ export default function RootLayout({ children }) {
         <Script src="/interface-cleanup.js" strategy="afterInteractive" />
         <Script src="/duty-month-view.js" strategy="afterInteractive" />
         <Script src="/dashboard-detail-jump.js" strategy="afterInteractive" />
+        <Script src="/mobile-post-login-tap.js" strategy="afterInteractive" />
       </body>
     </html>
   );
