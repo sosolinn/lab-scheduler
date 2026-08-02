@@ -39,7 +39,7 @@ function __labUpdateBookingAccessUi() {
     return;
   }
 
-  __labBookingSubmitButton.disabled = !authState.user;
+  __labBookingSubmitButton.disabled = false;
   if (!authState.user) {
     __labBookingSubmitButton.textContent = "登录后保存预约";
   } else if (__labEditingBookingId) {
@@ -148,6 +148,21 @@ bookingList.addEventListener(
         window.setTimeout(() => __labCancelBookingEdit(), 0);
       }
     }
+  },
+  true
+);
+
+__labBookingSubmitButton?.addEventListener(
+  "click",
+  (event) => {
+    if (__labCurrentAuthUser()) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    showFormMessage(bookingMessage, "请先登录后再创建预约。", "error");
+    window.__labOpenAuthDialog?.();
   },
   true
 );
