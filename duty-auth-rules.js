@@ -16,10 +16,26 @@ function __labUpdateDutyAuthUi() {
     return;
   }
 
+  __labDutyAuthSubmitButton.disabled = false;
   __labDutyAuthSubmitButton.textContent = __labDutyCurrentAuthUser()
     ? "提交值日记录"
     : "登录后提交值日";
 }
+
+__labDutyAuthSubmitButton?.addEventListener(
+  "click",
+  (event) => {
+    if (__labDutyCurrentAuthUser()) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    showFormMessage(dutyMessage, "请先登录后再提交值日记录。", "error");
+    window.__labOpenAuthDialog?.();
+  },
+  true
+);
 
 dutyForm.addEventListener(
   "submit",
