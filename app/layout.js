@@ -26,12 +26,12 @@ export default function RootLayout({ children }) {
   return (
     <html lang="zh-CN">
       <body>
+        <Script src="/mobile-post-login-tap.js" strategy="beforeInteractive" />
         {children}
         <Script src="/account-name-merge.js" strategy="afterInteractive" />
         <Script src="/interface-cleanup.js" strategy="afterInteractive" />
         <Script src="/duty-month-view.js" strategy="afterInteractive" />
         <Script src="/dashboard-detail-jump.js" strategy="afterInteractive" />
-        <Script src="/mobile-post-login-tap.js" strategy="afterInteractive" />
       </body>
     </html>
   );
