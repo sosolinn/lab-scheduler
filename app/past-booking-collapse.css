@@ -1,0 +1,85 @@
+.past-booking-toggle {
+  width: 100%;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 11px;
+  border: 1px solid #dbe3ec;
+  border-radius: 10px;
+  color: #475569;
+  text-align: left;
+  background: #f8fafc;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.past-booking-toggle:hover {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+}
+
+.past-booking-toggle-icon {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  color: #64748b;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+  background: #e9eef5;
+  transform: rotate(-90deg);
+  transition: transform 0.18s ease;
+}
+
+.past-booking-toggle.is-expanded .past-booking-toggle-icon {
+  transform: rotate(0deg);
+}
+
+.past-booking-toggle-copy {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  line-height: 1.3;
+}
+
+.past-booking-toggle-copy strong {
+  color: #334155;
+  font-size: 12px;
+}
+
+.past-booking-toggle-copy span {
+  color: #7c8798;
+  font-size: 11px;
+}
+
+.week-booking-item.past-booking-finished:not([hidden]) {
+  opacity: 0.78;
+}
+
+.week-booking-item[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 720px) {
+  .past-booking-toggle {
+    min-height: 40px;
+    padding: 8px 10px;
+    touch-action: manipulation;
+  }
+
+  .past-booking-toggle-copy {
+    flex-wrap: wrap;
+    gap: 1px 6px;
+  }
+
+  .past-booking-toggle-copy strong,
+  .past-booking-toggle-copy span {
+    font-size: 11px;
+  }
+}
