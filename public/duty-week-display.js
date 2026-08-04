@@ -72,18 +72,7 @@
 
     wrapper.append(weekInput, badge);
     sourceInput.insertAdjacentElement("beforebegin", wrapper);
-
-    const help = document.createElement("p");
-    help.id = "dutyWeekDisplayHelp";
-    help.className = "duty-week-display-help";
-    help.textContent = "值日记录按周展示，实际提交日期仍由服务端北京时间自动确定。";
-
-    const status = document.querySelector("#dutyBeijingTimeStatus");
-    if (status) {
-      status.insertAdjacentElement("beforebegin", help);
-    } else {
-      sourceInput.insertAdjacentElement("afterend", help);
-    }
+    document.querySelector("#dutyWeekDisplayHelp")?.remove();
 
     label.textContent = "值日周次";
     label.htmlFor = weekInput.id;
@@ -99,17 +88,11 @@
       }
 
       const latestStatus = document.querySelector("#dutyBeijingTimeStatus");
-      if (
-        latestStatus &&
-        !latestStatus.previousElementSibling?.classList.contains("duty-week-display-help")
-      ) {
-        latestStatus.insertAdjacentElement("beforebegin", help);
+      if (latestStatus?.id) {
+        weekInput.setAttribute("aria-describedby", latestStatus.id);
+      } else {
+        weekInput.removeAttribute("aria-describedby");
       }
-
-      weekInput.setAttribute(
-        "aria-describedby",
-        [help.id, latestStatus?.id].filter(Boolean).join(" ")
-      );
     }
 
     sourceInput.addEventListener("input", syncWeekDisplay);
