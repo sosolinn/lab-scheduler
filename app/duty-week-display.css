@@ -1,0 +1,67 @@
+.duty-date-source {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important;
+  border: 0 !important;
+  white-space: nowrap !important;
+  pointer-events: none !important;
+}
+
+.duty-week-display-wrap {
+  position: relative;
+}
+
+.duty-week-display {
+  padding-right: 54px;
+  color: #111827;
+  font-weight: 600;
+  cursor: default;
+  caret-color: transparent;
+  background: #f8fafc;
+}
+
+.duty-week-display:focus {
+  border-color: #d1d5db;
+  box-shadow: none;
+}
+
+.duty-week-display-icon {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  min-width: 31px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-50%);
+  border-radius: 8px;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 800;
+  background: #dbeafe;
+  pointer-events: none;
+}
+
+.duty-week-display-help {
+  margin-top: 7px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+@media (max-width: 720px) {
+  .duty-week-display {
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  .duty-week-display-help {
+    font-size: 11px;
+  }
+}
