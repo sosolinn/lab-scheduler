@@ -1,17 +1,140 @@
 (() => {
   const INSTALL_FLAG = "__LAB_TODAY_BOOKING_VIEW_INSTALLED__";
-  const PERSON_COLOR_COUNT = 8;
+  const PERSON_COLOR_STORAGE_KEY = "labSchedulerBookingPersonColorsV2";
+  const GOLDEN_ANGLE = 137.508;
   let installTimer = 0;
+  let personColorRegistry = loadPersonColorRegistry();
 
-  function getPersonColorClass(name) {
-    const text = String(name || "未命名").trim();
-    let hash = 0;
+  function normalizePersonKey(name) {
+    return String(name || "未命名")
+      .trim()
+      .replace(/\s+/g, " ")
+      .toLocaleLowerCase("zh-CN");
+  }
 
-    for (let index = 0; index < text.length; index += 1) {
-      hash = (hash * 31 + text.charCodeAt(index)) >>> 0;
+  function loadPersonColorRegistry() {
+    try {
+      const stored = JSON.parse(
+        window.localStorage.getItem(PERSON_COLOR_STORAGE_KEY) || "{}"
+      );
+
+      if (!stored || typeof stored !== "object" || Array.isArray(stored)) {
+        return {};
+      }
+
+      return Object.fromEntries(
+        Object.entries(stored).filter(
+          ([key, slot]) =>
+            Boolean(key) && Number.isInteger(slot) && slot >= 0
+        )
+      );
+    } catch {
+      return {};
+    }
+  }
+
+  function savePersonColorRegistry() {
+    try {
+      window.localStorage.setItem(
+        PERSON_COLOR_STORAGE_KEY,
+        JSON.stringify(personColorRegistry)
+      );
+    } catch {
+      // 浏览器禁用本地存储时，当前页面内仍保持稳定配色。
+    }
+  }
+
+  function getNextAvailableColorSlot(usedSlots) {
+    let slot = 0;
+    while (usedSlots.has(slot)) {
+      slot += 1;
+    }
+    return slot;
+  }
+
+  function syncPersonColorRegistry() {
+    const cleanedRegistry = {};
+    const usedSlots = new Set();
+
+    Object.entries(personColorRegistry).forEach(([key, slot]) => {
+      if (
+        key &&
+        Number.isInteger(slot) &&
+        slot >= 0 &&
+        !usedSlots.has(slot)
+      ) {
+        cleanedRegistry[key] = slot;
+        usedSlots.add(slot);
+      }
+    });
+
+    const currentPeople = Array.from(
+      new Set(
+        bookings
+          .map((booking) => normalizePersonKey(booking.name))
+          .filter(Boolean)
+      )
+    ).sort((first, second) =>
+      first.localeCompare(second, "zh-CN", { numeric: true })
+    );
+
+    currentPeople.forEach((personKey) => {
+      if (Number.isInteger(cleanedRegistry[personKey])) {
+        return;
+      }
+
+      const slot = getNextAvailableColorSlot(usedSlots);
+      cleanedRegistry[personKey] = slot;
+      usedSlots.add(slot);
+    });
+
+    personColorRegistry = cleanedRegistry;
+    savePersonColorRegistry();
+  }
+
+  function getPersonColorSlot(name) {
+    const personKey = normalizePersonKey(name);
+
+    if (!Number.isInteger(personColorRegistry[personKey])) {
+      const usedSlots = new Set(Object.values(personColorRegistry));
+      personColorRegistry[personKey] = getNextAvailableColorSlot(usedSlots);
+      savePersonColorRegistry();
     }
 
-    return `booking-person-color-${hash % PERSON_COLOR_COUNT}`;
+    return personColorRegistry[personKey];
+  }
+
+  function getPersonColors(name) {
+    const slot = getPersonColorSlot(name);
+    const hue = (212 + slot * GOLDEN_ANGLE) % 360;
+    const saturation = 68 + (slot % 3) * 4;
+    const accentLightness = hue >= 45 && hue <= 80 ? 34 : 40;
+
+    return {
+      accent: `hsl(${hue.toFixed(1)} ${saturation}% ${accentLightness}%)`,
+      border: `hsl(${hue.toFixed(1)} ${Math.min(88, saturation + 8)}% 74%)`,
+      background: `hsl(${hue.toFixed(1)} ${Math.min(92, saturation + 12)}% 96%)`
+    };
+  }
+
+  function applyPersonColor(element, name) {
+    if (!element) {
+      return;
+    }
+
+    const colors = getPersonColors(name);
+    element.classList.add("booking-person-colored");
+    element.style.setProperty("--booking-person-accent", colors.accent);
+    element.style.setProperty("--booking-person-border", colors.border);
+    element.style.setProperty("--booking-person-bg", colors.background);
+  }
+
+  function removeLegacyPersonColorClasses(element) {
+    Array.from(element.classList).forEach((className) => {
+      if (/^booking-person-color-\d+$/.test(className)) {
+        element.classList.remove(className);
+      }
+    });
   }
 
   function updateDashboardBookingHeading(today) {
@@ -34,6 +157,7 @@
       (booking) => booking.date === today
     );
 
+    syncPersonColorRegistry();
     updateDashboardBookingHeading(today);
 
     if (todayBookings.length === 0) {
@@ -47,11 +171,10 @@
     dashboardBookingList.innerHTML = todayBookings
       .map((booking) => {
         const benchClass = getBenchClass(booking.bench);
-        const personColorClass = getPersonColorClass(booking.name);
         const date = parseDateString(booking.date);
 
         return `
-          <div class="dashboard-summary-item dashboard-today-booking ${personColorClass}">
+          <div class="dashboard-summary-item dashboard-today-booking booking-person-colored">
             <div class="summary-date-block booking-person-date-block">
               <strong>${date.getDate()}</strong>
               <span>${date.getMonth() + 1}月</span>
@@ -67,6 +190,12 @@
         `;
       })
       .join("");
+
+    Array.from(
+      dashboardBookingList.querySelectorAll(".dashboard-today-booking")
+    ).forEach((item, index) => {
+      applyPersonColor(item, todayBookings[index]?.name);
+    });
   }
 
   function removeExistingCountBadge(dayElement) {
@@ -96,6 +225,8 @@
     const sortedBookings = sortBookings(bookings);
     const dayElements = Array.from(bookingList.querySelectorAll(".week-day"));
 
+    syncPersonColorRegistry();
+
     dayElements.forEach((dayElement, dayIndex) => {
       const date = addDays(visibleWeekStart, dayIndex);
       const dateString = dateToString(date);
@@ -122,11 +253,8 @@
           return;
         }
 
-        for (let colorIndex = 0; colorIndex < PERSON_COLOR_COUNT; colorIndex += 1) {
-          item.classList.remove(`booking-person-color-${colorIndex}`);
-        }
-
-        item.classList.add(getPersonColorClass(booking.name));
+        removeLegacyPersonColorClasses(item);
+        applyPersonColor(item, booking.name);
         item.classList.toggle("week-booking-detailed", isToday);
         item.classList.toggle("week-booking-compact", !isToday);
         item.classList.toggle(
@@ -168,6 +296,7 @@
     }
 
     window[INSTALL_FLAG] = true;
+    syncPersonColorRegistry();
 
     const renderBookingsWithPermissions = renderBookings;
     renderBookings = function renderTodayFocusedBookings() {
@@ -182,6 +311,7 @@
     renderBookings();
 
     window.addEventListener("lab:bookings-refreshed", () => {
+      syncPersonColorRegistry();
       renderDashboardBookings();
       decorateWeeklyBookings();
     });
