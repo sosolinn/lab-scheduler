@@ -48,11 +48,12 @@
   pointer-events: none;
 }
 
-.duty-week-display-help {
-  margin-top: 7px;
-  color: #64748b;
-  font-size: 12px;
-  line-height: 1.5;
+#dutyForm .duty-meta-grid {
+  margin-bottom: 4px;
+}
+
+#dutyForm .duty-meta-grid > .form-group {
+  margin-bottom: 8px;
 }
 
 @media (max-width: 720px) {
@@ -61,7 +62,11 @@
     font-size: 16px;
   }
 
-  .duty-week-display-help {
-    font-size: 11px;
+  #dutyForm .duty-meta-grid {
+    margin-bottom: 2px;
+  }
+
+  #dutyForm .duty-meta-grid > .form-group {
+    margin-bottom: 7px;
   }
 }
