@@ -6,6 +6,7 @@ const INITIALIZED_FLAG = "__LAB_SCHEDULER_LEGACY_INITIALIZED__";
 const BOOKING_STORAGE_KEY = "labSchedulerBookings";
 const BOOKING_API_ENDPOINT = "/api/bookings";
 const PIPETTE_TIPS_CHECK_TEXT = "插好 5 mL 与 10 μL 枪头";
+const CELL_ROOM_MOPPING_CHECK_TEXT = "细胞房拖地清洁";
 
 function readLocalBookings() {
   try {
@@ -85,15 +86,24 @@ async function hydrateBookingsFromDatabase() {
   );
 }
 
-function ensurePipetteTipsMarkup() {
-  const selectionCount = document.querySelector("#dutySelectionCount");
-  if (selectionCount) {
-    selectionCount.textContent = selectionCount.textContent.replace(
-      /\/\d+ 项$/,
-      "/17 项"
-    );
-  }
+function createDutyOption(value) {
+  const option = document.createElement("label");
+  option.className = "duty-check-option";
 
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.className = "duty-check-input";
+  input.name = "dutyCheck";
+  input.value = value;
+
+  const text = document.createElement("span");
+  text.textContent = value;
+
+  option.append(input, text);
+  return option;
+}
+
+function ensurePipetteTipsMarkup() {
   if (
     document.querySelector(
       `input[name="dutyCheck"][value="${PIPETTE_TIPS_CHECK_TEXT}"]`
@@ -111,20 +121,54 @@ function ensurePipetteTipsMarkup() {
     return;
   }
 
-  const tipsOption = document.createElement("label");
-  tipsOption.className = "duty-check-option";
+  pipetteOption.insertAdjacentElement(
+    "afterend",
+    createDutyOption(PIPETTE_TIPS_CHECK_TEXT)
+  );
+}
 
-  const tipsInput = document.createElement("input");
-  tipsInput.type = "checkbox";
-  tipsInput.className = "duty-check-input";
-  tipsInput.name = "dutyCheck";
-  tipsInput.value = PIPETTE_TIPS_CHECK_TEXT;
+function ensureCellRoomMoppingMarkup() {
+  if (
+    document.querySelector(
+      `input[name="dutyCheck"][value="${CELL_ROOM_MOPPING_CHECK_TEXT}"]`
+    )
+  ) {
+    return;
+  }
 
-  const tipsText = document.createElement("span");
-  tipsText.textContent = PIPETTE_TIPS_CHECK_TEXT;
+  const checklist = document.querySelector("#dutyForm .duty-checklist");
+  if (!checklist) {
+    return;
+  }
 
-  tipsOption.append(tipsInput, tipsText);
-  pipetteOption.insertAdjacentElement("afterend", tipsOption);
+  const group = document.createElement("fieldset");
+  group.className = "duty-check-group";
+
+  const legend = document.createElement("legend");
+  legend.textContent = "7. 细胞房拖地清洁";
+
+  group.append(legend, createDutyOption(CELL_ROOM_MOPPING_CHECK_TEXT));
+  checklist.appendChild(group);
+
+  const abnormalLabel = document.querySelector(
+    'label[for="dutyAbnormal"]'
+  );
+  if (abnormalLabel) {
+    abnormalLabel.textContent = "8. 异常记录";
+  }
+}
+
+function ensureDutyChecklistMarkup() {
+  ensurePipetteTipsMarkup();
+  ensureCellRoomMoppingMarkup();
+
+  const selectionCount = document.querySelector("#dutySelectionCount");
+  if (selectionCount) {
+    selectionCount.textContent = selectionCount.textContent.replace(
+      /\/\d+ 项$/,
+      "/18 项"
+    );
+  }
 }
 
 function ensurePipetteTipsSource(source) {
@@ -137,6 +181,21 @@ function ensurePipetteTipsSource(source) {
     (match, pipetteItem, spacing) =>
       `${pipetteItem}${spacing}"${PIPETTE_TIPS_CHECK_TEXT}",${spacing}"液氮罐液氮充足"`
   );
+}
+
+function ensureCellRoomMoppingSource(source) {
+  if (source.includes(`"${CELL_ROOM_MOPPING_CHECK_TEXT}"`)) {
+    return source;
+  }
+
+  return source.replace(
+    /(\{\s*title:\s*"6\. 废弃物处理",\s*items:\s*\["废液桶和垃圾袋未过满、无泄漏"\]\s*\})(\s*\];)/,
+    `$1,\n  {\n    title: "7. 细胞房拖地清洁",\n    items: ["${CELL_ROOM_MOPPING_CHECK_TEXT}"]\n  }$2`
+  );
+}
+
+function ensureDutyChecklistSource(source) {
+  return ensureCellRoomMoppingSource(ensurePipetteTipsSource(source));
 }
 
 function downgradeRecoverableDatabaseLogs(source) {
@@ -173,12 +232,12 @@ export default function LegacyScriptRunner({ source }) {
       }
 
       window[INITIALIZED_FLAG] = true;
-      ensurePipetteTipsMarkup();
+      ensureDutyChecklistMarkup();
 
       const script = document.createElement("script");
       script.setAttribute("data-lab-scheduler-runtime", "true");
       script.textContent = downgradeRecoverableDatabaseLogs(
-        ensurePipetteTipsSource(source)
+        ensureDutyChecklistSource(source)
       );
       document.body.appendChild(script);
     }
