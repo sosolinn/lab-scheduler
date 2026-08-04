@@ -1,58 +1,58 @@
 .booking-person-colored {
-  --booking-person-accent: #2563eb;
-  --booking-person-border: #93c5fd;
-  --booking-person-bg: #eff6ff;
+  --booking-person-accent: #5f7390;
+  --booking-person-border: #cbd5e1;
+  --booking-person-bg: #f7f9fc;
   transition:
     border-color 0.18s ease,
     background-color 0.18s ease;
 }
 
 .booking-person-color-0 {
-  --booking-person-accent: #2563eb;
-  --booking-person-border: #93c5fd;
-  --booking-person-bg: #eff6ff;
+  --booking-person-accent: #5b7398;
+  --booking-person-border: #cad5e4;
+  --booking-person-bg: #f5f8fc;
 }
 
 .booking-person-color-1 {
-  --booking-person-accent: #7c3aed;
-  --booking-person-border: #c4b5fd;
-  --booking-person-bg: #f5f3ff;
+  --booking-person-accent: #76688d;
+  --booking-person-border: #d8d0e2;
+  --booking-person-bg: #f8f6fa;
 }
 
 .booking-person-color-2 {
-  --booking-person-accent: #e11d48;
-  --booking-person-border: #fda4af;
-  --booking-person-bg: #fff1f2;
+  --booking-person-accent: #956a73;
+  --booking-person-border: #e2d0d4;
+  --booking-person-bg: #faf6f7;
 }
 
 .booking-person-color-3 {
-  --booking-person-accent: #b45309;
-  --booking-person-border: #fcd34d;
-  --booking-person-bg: #fffbeb;
+  --booking-person-accent: #866f4f;
+  --booking-person-border: #e1d7c7;
+  --booking-person-bg: #faf8f4;
 }
 
 .booking-person-color-4 {
-  --booking-person-accent: #0f766e;
-  --booking-person-border: #5eead4;
-  --booking-person-bg: #f0fdfa;
+  --booking-person-accent: #587d78;
+  --booking-person-border: #cbdedb;
+  --booking-person-bg: #f4f8f7;
 }
 
 .booking-person-color-5 {
-  --booking-person-accent: #4338ca;
-  --booking-person-border: #a5b4fc;
-  --booking-person-bg: #eef2ff;
+  --booking-person-accent: #626d94;
+  --booking-person-border: #d0d5e4;
+  --booking-person-bg: #f6f7fa;
 }
 
 .booking-person-color-6 {
-  --booking-person-accent: #c2410c;
-  --booking-person-border: #fdba74;
-  --booking-person-bg: #fff7ed;
+  --booking-person-accent: #906d5b;
+  --booking-person-border: #e1d3ca;
+  --booking-person-bg: #faf7f5;
 }
 
 .booking-person-color-7 {
-  --booking-person-accent: #047857;
-  --booking-person-border: #6ee7b7;
-  --booking-person-bg: #ecfdf5;
+  --booking-person-accent: #637e69;
+  --booking-person-border: #d0ddd2;
+  --booking-person-bg: #f5f8f5;
 }
 
 .dashboard-today-booking {
@@ -61,7 +61,7 @@
   background: linear-gradient(
     90deg,
     var(--booking-person-bg) 0%,
-    #ffffff 72%
+    #ffffff 78%
   );
 }
 
@@ -171,17 +171,17 @@
   border: 0;
   border-radius: 6px;
   transform: translateY(-50%);
-  color: #2563eb;
+  color: #5b7398;
   font-size: 10px;
   font-weight: 700;
-  background: #eff6ff;
+  background: #f1f5f9;
 }
 
 .week-day-detailed .week-booking-detailed {
   border-color: var(--booking-person-border);
   border-left-width: 5px;
   background: var(--booking-person-bg);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.035);
 }
 
 .week-day-detailed .week-booking-detailed .week-booking-time {
