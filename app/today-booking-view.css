@@ -1,3 +1,12 @@
+.booking-person-colored {
+  --booking-person-accent: #2563eb;
+  --booking-person-border: #93c5fd;
+  --booking-person-bg: #eff6ff;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease;
+}
+
 .booking-person-color-0 {
   --booking-person-accent: #2563eb;
   --booking-person-border: #93c5fd;
