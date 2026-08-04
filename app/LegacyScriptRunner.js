@@ -157,7 +157,7 @@ function ensureCellRoomMoppingMarkup() {
     'label[for="dutyAbnormal"]'
   );
   if (abnormalLabel) {
-    abnormalLabel.textContent = "8. 异常记录";
+    abnormalLabel.textContent = "异常记录";
   }
 }
 
