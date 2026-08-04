@@ -6,6 +6,7 @@ import "./mobile-containment.css";
 import "./mobile-interaction.css";
 import "./android-time-picker.css";
 import "./today-booking-view.css";
+import "./past-booking-collapse.css";
 import "./duty-week-display.css";
 import "./duty-people.css";
 import "./compact-header.css";
@@ -37,6 +38,7 @@ export default function RootLayout({ children }) {
         <Script src="/dashboard-detail-jump.js" strategy="afterInteractive" />
         <Script src="/android-time-picker.js" strategy="afterInteractive" />
         <Script src="/today-booking-view.js" strategy="afterInteractive" />
+        <Script src="/past-booking-collapse.js" strategy="afterInteractive" />
         <Script src="/duty-week-display.js" strategy="afterInteractive" />
         <Script src="/mobile-header-login.js" strategy="afterInteractive" />
       </body>
