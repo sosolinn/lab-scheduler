@@ -57,15 +57,19 @@
       dayBookingsElement.prepend(toggle);
     }
 
+    const actionText = isExpanded ? "收起" : "展开";
     toggle.dataset.pastBookingDate = dateString;
     toggle.classList.toggle("is-expanded", isExpanded);
     toggle.setAttribute("aria-expanded", String(isExpanded));
+    toggle.setAttribute("aria-label", `${actionText}${count}条已结束预约`);
+    toggle.title = `${actionText}${count}条已结束预约`;
     toggle.innerHTML = `
-      <span class="past-booking-toggle-icon" aria-hidden="true">⌄</span>
-      <span class="past-booking-toggle-copy">
-        <strong>${isExpanded ? "收起已结束预约" : "已结束预约"}</strong>
-        <span>${count} 条${isExpanded ? "，点击收起" : "，点击展开"}</span>
+      <span class="past-booking-toggle-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="m9 6 6 6-6 6"></path>
+        </svg>
       </span>
+      <span class="past-booking-toggle-count">${count} 条</span>
     `;
   }
 
