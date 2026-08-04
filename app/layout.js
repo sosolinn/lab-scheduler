@@ -38,6 +38,7 @@ export default function RootLayout({ children }) {
         <Script src="/android-time-picker.js" strategy="afterInteractive" />
         <Script src="/today-booking-view.js" strategy="afterInteractive" />
         <Script src="/duty-week-display.js" strategy="afterInteractive" />
+        <Script src="/mobile-header-login.js" strategy="afterInteractive" />
       </body>
     </html>
   );
