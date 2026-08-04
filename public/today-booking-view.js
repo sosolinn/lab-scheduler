@@ -107,13 +107,17 @@
   function getPersonColors(name) {
     const slot = getPersonColorSlot(name);
     const hue = (212 + slot * GOLDEN_ANGLE) % 360;
-    const saturation = 68 + (slot % 3) * 4;
-    const accentLightness = hue >= 45 && hue <= 80 ? 34 : 40;
+    const saturation = 30 + (slot % 4) * 3;
+    const isWarmYellow = hue >= 42 && hue <= 82;
+    const isCyan = hue >= 175 && hue <= 205;
+    const accentLightness = isWarmYellow ? 35 : isCyan ? 36 : 42;
+    const borderSaturation = Math.min(44, saturation + 5);
+    const backgroundSaturation = Math.min(48, saturation + 8);
 
     return {
       accent: `hsl(${hue.toFixed(1)} ${saturation}% ${accentLightness}%)`,
-      border: `hsl(${hue.toFixed(1)} ${Math.min(88, saturation + 8)}% 74%)`,
-      background: `hsl(${hue.toFixed(1)} ${Math.min(92, saturation + 12)}% 96%)`
+      border: `hsl(${hue.toFixed(1)} ${borderSaturation}% 79%)`,
+      background: `hsl(${hue.toFixed(1)} ${backgroundSaturation}% 97%)`
     };
   }
 
