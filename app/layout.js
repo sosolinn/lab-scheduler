@@ -9,6 +9,7 @@ import "./today-booking-view.css";
 import "./past-booking-collapse.css";
 import "./duty-week-display.css";
 import "./duty-people.css";
+import "./duty-priority.css";
 import "./form-control-icons.css";
 import "./compact-header.css";
 import "./duty-record-rules.css";

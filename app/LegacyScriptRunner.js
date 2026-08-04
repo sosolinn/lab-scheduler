@@ -142,12 +142,15 @@ function ensureCellRoomMoppingMarkup() {
   }
 
   const group = document.createElement("fieldset");
-  group.className = "duty-check-group";
+  group.className = "duty-check-group duty-priority-group";
+  group.setAttribute(
+    "aria-label",
+    `7. 值日重点：${CELL_ROOM_MOPPING_CHECK_TEXT}`
+  );
 
-  const legend = document.createElement("legend");
-  legend.textContent = "7. 细胞房拖地清洁";
-
-  group.append(legend, createDutyOption(CELL_ROOM_MOPPING_CHECK_TEXT));
+  const priorityOption = createDutyOption(CELL_ROOM_MOPPING_CHECK_TEXT);
+  priorityOption.classList.add("duty-priority-option");
+  group.appendChild(priorityOption);
   checklist.appendChild(group);
 
   const abnormalLabel = document.querySelector(
@@ -190,7 +193,7 @@ function ensureCellRoomMoppingSource(source) {
 
   return source.replace(
     /(\{\s*title:\s*"6\. 废弃物处理",\s*items:\s*\["废液桶和垃圾袋未过满、无泄漏"\]\s*\})(\s*\];)/,
-    `$1,\n  {\n    title: "7. 细胞房拖地清洁",\n    items: ["${CELL_ROOM_MOPPING_CHECK_TEXT}"]\n  }$2`
+    `$1,\n  {\n    title: "7. 值日重点",\n    items: ["${CELL_ROOM_MOPPING_CHECK_TEXT}"]\n  }$2`
   );
 }
 
