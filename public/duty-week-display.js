@@ -1,10 +1,6 @@
 (() => {
   const INITIALIZED_FLAG = "__LAB_DUTY_WEEK_DISPLAY_INITIALIZED__";
 
-  function pad(value) {
-    return String(value).padStart(2, "0");
-  }
-
   function parseDate(value) {
     const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (!match) return null;
@@ -78,13 +74,13 @@
     sourceInput.insertAdjacentElement("beforebegin", wrapper);
 
     const help = document.createElement("p");
+    help.id = "dutyWeekDisplayHelp";
     help.className = "duty-week-display-help";
     help.textContent = "值日记录按周展示，实际提交日期仍由服务端北京时间自动确定。";
 
     const status = document.querySelector("#dutyBeijingTimeStatus");
     if (status) {
       status.insertAdjacentElement("beforebegin", help);
-      weekInput.setAttribute("aria-describedby", `${help.id || ""} ${status.id}`.trim());
     } else {
       sourceInput.insertAdjacentElement("afterend", help);
     }
@@ -92,23 +88,28 @@
     label.textContent = "值日周次";
     label.htmlFor = weekInput.id;
 
-    let lastDateValue = "";
+    let lastDisplayValue = "";
 
     function syncWeekDisplay() {
       const date = parseDate(sourceInput.value);
       const nextValue = date ? `${formatWeekRange(date)}（本周）` : "";
-      if (nextValue !== lastDateValue) {
+      if (nextValue !== lastDisplayValue) {
         weekInput.value = nextValue;
-        lastDateValue = nextValue;
+        lastDisplayValue = nextValue;
       }
 
       const latestStatus = document.querySelector("#dutyBeijingTimeStatus");
-      if (latestStatus && !latestStatus.previousElementSibling?.classList.contains("duty-week-display-help")) {
+      if (
+        latestStatus &&
+        !latestStatus.previousElementSibling?.classList.contains("duty-week-display-help")
+      ) {
         latestStatus.insertAdjacentElement("beforebegin", help);
       }
-      if (latestStatus) {
-        weekInput.setAttribute("aria-describedby", latestStatus.id);
-      }
+
+      weekInput.setAttribute(
+        "aria-describedby",
+        [help.id, latestStatus?.id].filter(Boolean).join(" ")
+      );
     }
 
     sourceInput.addEventListener("input", syncWeekDisplay);
