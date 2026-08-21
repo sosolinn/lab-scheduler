@@ -23,9 +23,9 @@ export const metadata = {
   description: "楷模实验室超净台预约与值日管理系统",
   manifest: "/manifest.json",
   icons: {
-    icon: "/camel-dna-logo.svg",
-    shortcut: "/camel-dna-logo.svg",
-    apple: "/camel-dna-logo.svg"
+    icon: "/icons/icon-192.png",
+    shortcut: "/icons/icon-192.png",
+    apple: "/icons/apple-touch-icon.png"
   },
   appleWebApp: {
     capable: true,
