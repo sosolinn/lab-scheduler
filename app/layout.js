@@ -21,10 +21,16 @@ import "./settings.css";
 export const metadata = {
   title: "楷模实验室预约系统",
   description: "楷模实验室超净台预约与值日管理系统",
+  manifest: "/manifest.json",
   icons: {
     icon: "/camel-dna-logo.svg",
     shortcut: "/camel-dna-logo.svg",
     apple: "/camel-dna-logo.svg"
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "楷模实验室"
   }
 };
 
@@ -32,6 +38,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="zh-CN">
       <body>
+        <Script src="/pwa-register.js" strategy="afterInteractive" />
         <Script src="/mobile-post-login-tap.js" strategy="beforeInteractive" />
         {children}
         <Script src="/account-name-merge.js" strategy="afterInteractive" />
