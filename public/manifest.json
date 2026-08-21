@@ -1,0 +1,19 @@
+{
+  "name": "楷模实验室预约系统",
+  "short_name": "楷模实验室",
+  "description": "实验室超净台预约与值日管理系统",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "/camel-dna-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
