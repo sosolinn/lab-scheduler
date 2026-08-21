@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 2400">
+  <rect width="1200" height="2400" fill="#1f3f7a"/>
+  <g transform="translate(600 900)">
+    <circle r="120" fill="#ffffff"/>
+    <circle cx="0" cy="-230" r="55" fill="#ffffff"/>
+    <circle cx="200" cy="-110" r="55" fill="#ffffff"/>
+    <circle cx="200" cy="110" r="55" fill="#ffffff"/>
+    <circle cx="0" cy="230" r="55" fill="#ffffff"/>
+    <circle cx="-200" cy="110" r="55" fill="#ffffff"/>
+    <circle cx="-200" cy="-110" r="55" fill="#ffffff"/>
+    <path d="M0-120V-175M100-60L160-95M100 60L160 95M0 120V175M-100 60L-160 95M-100-60L-160-95" stroke="#ffffff" stroke-width="18"/>
+  </g>
+  <text x="600" y="1250" text-anchor="middle" font-family="Arial, sans-serif" font-size="110" fill="#ffffff">楷模实验室</text>
+  <text x="600" y="1370" text-anchor="middle" font-family="Arial, sans-serif" font-size="55" fill="#dbe7ff">实验室预约与值日管理系统</text>
+</svg>
