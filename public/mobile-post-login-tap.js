@@ -2,7 +2,6 @@
   const FAST_TAP_SELECTOR = [
     ".nav-item",
     "[data-go-page]",
-    "#labAuthAccountButton",
     "#labAuthLoginButton",
     "[data-close-auth]",
     "#bookingForm button[type='submit']",

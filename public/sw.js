@@ -1,4 +1,4 @@
-const CACHE_NAME = "camellab-pwa-v6";
+const CACHE_NAME = "camellab-pwa-v7";
 const APP_SHELL = [
   "/manifest.json",
   "/icons/icon-192.png",
@@ -73,11 +73,16 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  const isStaticAsset =
-    url.pathname.startsWith("/_next/static/") ||
-    ["style", "script", "image", "font"].includes(request.destination);
+  const isHashedNextAsset = url.pathname.startsWith("/_next/static/");
+  const isLongLivedAsset = ["image", "font"].includes(request.destination);
+  const isMutableAsset = ["style", "script"].includes(request.destination);
 
-  if (isStaticAsset) {
+  if (isHashedNextAsset || isLongLivedAsset) {
     event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  if (isMutableAsset) {
+    event.respondWith(networkFirst(request));
   }
 });

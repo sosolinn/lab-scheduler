@@ -1,7 +1,7 @@
 (() => {
   const ACCOUNT_BUTTON_SELECTOR = "#labAuthAccountButton";
   let pointerStart = null;
-  let lastDirectActivation = 0;
+  let lastDirectActivation = Number.NEGATIVE_INFINITY;
 
   function isMobileTouchViewport() {
     return (
