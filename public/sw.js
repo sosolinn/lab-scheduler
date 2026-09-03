@@ -1,4 +1,4 @@
-const CACHE_NAME = "camellab-pwa-v4";
+const CACHE_NAME = "camellab-pwa-v5";
 const APP_SHELL = [
   "/manifest.json",
   "/icons/icon-192.png",
@@ -13,11 +13,14 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        )
       )
-    ).then(() => self.clients.claim())
+      .then(() => self.clients.claim())
   );
 });
 
@@ -25,15 +28,33 @@ function canCache(response) {
   return response && response.ok && response.type !== "opaque";
 }
 
-async function fetchAndCache(request) {
-  const response = await fetch(request);
+async function cacheResponse(request, response) {
+  if (!canCache(response)) return response;
 
-  if (canCache(response)) {
-    const cache = await caches.open(CACHE_NAME);
-    cache.put(request, response.clone());
-  }
-
+  const cache = await caches.open(CACHE_NAME);
+  await cache.put(request, response.clone());
   return response;
+}
+
+async function networkFirst(request) {
+  try {
+    const response = await fetch(request);
+    return await cacheResponse(request, response);
+  } catch {
+    return (await caches.match(request)) || (await caches.match("/")) || Response.error();
+  }
+}
+
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+
+  try {
+    const response = await fetch(request);
+    return await cacheResponse(request, response);
+  } catch {
+    return Response.error();
+  }
 }
 
 self.addEventListener("fetch", (event) => {
@@ -43,24 +64,16 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin || url.pathname.startsWith("/api/")) return;
 
-  const isNavigation = request.mode === "navigate";
+  if (request.mode === "navigate") {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
   const isStaticAsset =
     url.pathname.startsWith("/_next/static/") ||
     ["style", "script", "image", "font"].includes(request.destination);
 
-  if (!isNavigation && !isStaticAsset) return;
-
-  event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) {
-        event.waitUntil(fetchAndCache(request).catch(() => undefined));
-        return cached;
-      }
-
-      return fetchAndCache(request).catch(() => {
-        if (isNavigation) return caches.match("/");
-        return Response.error();
-      });
-    })
-  );
+  if (isStaticAsset) {
+    event.respondWith(cacheFirst(request));
+  }
 });
