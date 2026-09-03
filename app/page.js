@@ -424,6 +424,7 @@ export default function HomePage() {
   return (
     <>
       <div
+        suppressHydrationWarning
         style={{ display: "contents" }}
         dangerouslySetInnerHTML={{ __html: markup }}
       />
