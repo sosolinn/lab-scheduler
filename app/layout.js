@@ -18,6 +18,7 @@ import "./auth.css";
 import "./auth-overrides.css";
 import "./settings.css";
 import "./apple-ui.css";
+import "./navigation-booking-polish.css";
 
 export const metadata = {
   title: "楷模实验室预约系统",
