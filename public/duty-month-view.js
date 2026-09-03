@@ -1,11 +1,14 @@
 (() => {
   const INITIALIZED_FLAG = "__LAB_DUTY_MONTH_VIEW_INITIALIZED__";
+  const RUNTIME_KEY = "__LAB_SCHEDULER_RUNTIME__";
 
   function initializeDutyMonthView() {
     if (window[INITIALIZED_FLAG]) return true;
+    const runtime = window[RUNTIME_KEY];
     if (
-      typeof window.renderDuties !== "function" ||
-      !document.querySelector("#dutyList")
+      !runtime ||
+      typeof runtime.renderDuties !== "function" ||
+      !runtime.dutyList
     ) {
       return false;
     }
@@ -28,7 +31,7 @@
     }
 
     function dutyMonthKey(date) {
-      return `${date.getFullYear()}-${padNumber(date.getMonth() + 1)}`;
+      return `${date.getFullYear()}-${runtime.padNumber(date.getMonth() + 1)}`;
     }
 
     function formatDutyMonth(date) {
@@ -80,21 +83,21 @@
           .querySelector("#prevDutyMonthButton")
           ?.addEventListener("click", () => {
             visibleDutyMonth = addDutyMonths(visibleDutyMonth, -1);
-            renderDuties();
+            runtime.renderDuties();
           });
 
         navigation
           .querySelector("#currentDutyMonthButton")
           ?.addEventListener("click", () => {
             visibleDutyMonth = dutyMonthStart(new Date());
-            renderDuties();
+            runtime.renderDuties();
           });
 
         navigation
           .querySelector("#nextDutyMonthButton")
           ?.addEventListener("click", () => {
             visibleDutyMonth = addDutyMonths(visibleDutyMonth, 1);
-            renderDuties();
+            runtime.renderDuties();
           });
       }
 
@@ -103,12 +106,12 @@
 
     function renderMonthlyDutyRecord(duty) {
       const checkedCount = (duty.checkedItems || []).length;
-      const isComplete = checkedCount === ALL_DUTY_ITEMS.length;
+      const isComplete = checkedCount === runtime.ALL_DUTY_ITEMS.length;
       const hasAbnormal = Boolean(duty.abnormal);
       const hasLegacyContent = Boolean(duty.legacyTask || duty.legacyNote);
       const statusText = hasLegacyContent
         ? "旧版记录"
-        : `${checkedCount}/${ALL_DUTY_ITEMS.length} 项`;
+        : `${checkedCount}/${runtime.ALL_DUTY_ITEMS.length} 项`;
       const statusClass = hasLegacyContent
         ? "legacy"
         : isComplete
@@ -119,14 +122,14 @@
         ? `
           <div class="duty-legacy-note">
             <strong>旧版值日内容</strong>
-            ${duty.legacyTask ? `<p>任务：${escapeHtml(duty.legacyTask)}</p>` : ""}
-            ${duty.legacyNote ? `<p>备注：${escapeHtml(duty.legacyNote)}</p>` : ""}
+            ${duty.legacyTask ? `<p>任务：${runtime.escapeHtml(duty.legacyTask)}</p>` : ""}
+            ${duty.legacyNote ? `<p>备注：${runtime.escapeHtml(duty.legacyNote)}</p>` : ""}
           </div>
         `
         : `
           <details class="duty-record-details">
             <summary>查看完整检查清单</summary>
-            <div class="duty-record-checklist">${renderDutyChecklist(duty)}</div>
+            <div class="duty-record-checklist">${runtime.renderDutyChecklist(duty)}</div>
           </details>
         `;
 
@@ -134,27 +137,27 @@
         <article class="record-item duty-record-item">
           <div class="record-main duty-record-main">
             <div class="record-title duty-record-title">
-              <strong>${escapeHtml(duty.name)}</strong>
+              <strong>${runtime.escapeHtml(duty.name)}</strong>
               <span class="duty-status-badge ${statusClass}">${statusText}</span>
               ${hasAbnormal ? '<span class="duty-status-badge abnormal">有异常</span>' : ""}
             </div>
             <div class="record-details duty-record-summary">
-              <div>${formatDate(duty.date)}</div>
+              <div>${runtime.formatDate(duty.date)}</div>
               <div class="duty-abnormal-record${hasAbnormal ? " has-abnormal" : ""}">
-                <strong>异常记录：</strong>${escapeHtml(duty.abnormal || "无")}
+                <strong>异常记录：</strong>${runtime.escapeHtml(duty.abnormal || "无")}
               </div>
             </div>
             ${detailsMarkup}
           </div>
-          <button class="delete-button" data-delete-duty="${escapeHtml(duty.id)}">删除</button>
+          <button class="delete-button" data-delete-duty="${runtime.escapeHtml(duty.id)}">删除</button>
         </article>
       `;
     }
 
-    window.renderDuties = function renderDutiesByMonth() {
+    runtime.renderDuties = function renderDutiesByMonth() {
       const summary = ensureDutyMonthNavigation();
       const monthKey = dutyMonthKey(visibleDutyMonth);
-      const monthDuties = sortDuties(duties).filter((duty) =>
+      const monthDuties = runtime.sortDuties(runtime.duties).filter((duty) =>
         String(duty.date || "").startsWith(monthKey)
       );
 
@@ -163,7 +166,7 @@
       }
 
       if (monthDuties.length === 0) {
-        dutyList.innerHTML = createEmptyState(
+        runtime.dutyList.innerHTML = runtime.createEmptyState(
           "本月暂无值日记录",
           "可切换月份查看历史记录，或填写本月值日检查。"
         );
@@ -177,15 +180,15 @@
         dutiesByDate.set(duty.date, records);
       });
 
-      const today = getTodayString();
-      dutyList.innerHTML = Array.from(dutiesByDate.entries())
+      const today = runtime.getTodayString();
+      runtime.dutyList.innerHTML = Array.from(dutiesByDate.entries())
         .map(([date, records]) => {
           const isToday = date === today;
           return `
             <section class="duty-month-day-group${isToday ? " today" : ""}">
               <header class="duty-month-day-heading">
                 <div>
-                  <strong>${formatShortDate(date)}</strong>
+                  <strong>${runtime.formatShortDate(date)}</strong>
                   ${isToday ? '<span class="duty-month-today-label">今天</span>' : ""}
                 </div>
                 <span>${records.length} 条</span>
@@ -199,27 +202,27 @@
         .join("");
     };
 
-    dutyDateInput?.addEventListener("change", () => {
-      if (!dutyDateInput.value) return;
+    runtime.dutyDateInput?.addEventListener("change", () => {
+      if (!runtime.dutyDateInput.value) return;
       visibleDutyMonth = dutyMonthStart(
-        parseDateString(dutyDateInput.value)
+        runtime.parseDateString(runtime.dutyDateInput.value)
       );
-      renderDuties();
+      runtime.renderDuties();
     });
 
-    dutyForm?.addEventListener(
+    runtime.dutyForm?.addEventListener(
       "submit",
       () => {
-        if (!dutyDateInput.value) return;
+        if (!runtime.dutyDateInput.value) return;
         visibleDutyMonth = dutyMonthStart(
-          parseDateString(dutyDateInput.value)
+          runtime.parseDateString(runtime.dutyDateInput.value)
         );
       },
       true
     );
 
     ensureDutyMonthNavigation();
-    renderDuties();
+    runtime.renderDuties();
     return true;
   }
 
