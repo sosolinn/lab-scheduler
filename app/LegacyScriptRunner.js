@@ -57,16 +57,13 @@ function createRuntimeSource(source) {
     }
 
     window[INITIALIZED_FLAG] = true;
-    document.documentElement.dataset.labRuntime = "starting";
 
     try {
       ${preparedSource}
-      document.documentElement.dataset.labRuntime = "ready";
       requestAnimationFrame(() => {
         window.dispatchEvent(new Event("lab:app-ready"));
       });
     } catch (error) {
-      document.documentElement.dataset.labRuntime = "error";
       console.error("楷模实验室功能初始化失败：", error);
     }
   })();`;
