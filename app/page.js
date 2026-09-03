@@ -6,6 +6,8 @@ import LegacyScriptRunner from "./LegacyScriptRunner";
 export const dynamic = "force-static";
 
 const CO2_CYLINDER_CHECK_TEXT = "CO₂钢瓶气体充足";
+const PIPETTE_TIPS_CHECK_TEXT = "插好 5 mL 与 10 μL 枪头";
+const CELL_ROOM_MOPPING_CHECK_TEXT = "细胞房拖地清洁";
 
 const SETTINGS_NAV_MARKUP = `
           <button class="nav-item" data-page="settings">
@@ -242,6 +244,49 @@ function ensureCo2CylinderMarkup(markup) {
   );
 }
 
+function ensureAdditionalDutyMarkup(markup) {
+  let result = markup;
+  const lineBreak = result.includes("\r\n") ? "\r\n" : "\n";
+
+  if (!result.includes(`value="${PIPETTE_TIPS_CHECK_TEXT}"`)) {
+    const pipetteOptionPattern =
+      /(<label class="duty-check-option">\s*<input[^>]*value="移液器已归位"[^>]*>\s*<span>移液器已归位<\/span>\s*<\/label>)/;
+    const pipetteOption = [
+      '<label class="duty-check-option">',
+      `  <input type="checkbox" class="duty-check-input" name="dutyCheck" value="${PIPETTE_TIPS_CHECK_TEXT}">`,
+      `  <span>${PIPETTE_TIPS_CHECK_TEXT}</span>`,
+      "</label>"
+    ]
+      .map((line, index) => `${index === 0 ? "" : "                  "}${line}`)
+      .join(lineBreak);
+
+    result = result.replace(
+      pipetteOptionPattern,
+      `$1${lineBreak}                  ${pipetteOption}`
+    );
+  }
+
+  if (!result.includes(`value="${CELL_ROOM_MOPPING_CHECK_TEXT}"`)) {
+    const priorityGroup = [
+      '<fieldset class="duty-check-group duty-priority-group" aria-label="7. 值日重点：细胞房拖地清洁">',
+      '  <label class="duty-check-option duty-priority-option">',
+      `    <input type="checkbox" class="duty-check-input" name="dutyCheck" value="${CELL_ROOM_MOPPING_CHECK_TEXT}">`,
+      `    <span>${CELL_ROOM_MOPPING_CHECK_TEXT}</span>`,
+      "  </label>",
+      "</fieldset>"
+    ]
+      .map((line, index) => `${index === 0 ? "" : "                "}${line}`)
+      .join(lineBreak);
+
+    result = result.replace(
+      /(\s*)(<div class="form-group duty-abnormal-group">)/,
+      `${lineBreak}              ${priorityGroup}$1$2`
+    );
+  }
+
+  return result.replace(/已勾选 0\/\d+ 项/g, "已勾选 0/18 项");
+}
+
 function ensureSettingsMarkup(markup) {
   let result = markup;
 
@@ -293,7 +338,7 @@ function applyDisplayTextReplacements(markup) {
   );
 
   return ensureSettingsMarkup(
-    ensureCo2CylinderMarkup(replacedMarkup)
+    ensureAdditionalDutyMarkup(ensureCo2CylinderMarkup(replacedMarkup))
   );
 }
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = "camellab-pwa-v5";
+const CACHE_NAME = "camellab-pwa-v6";
 const APP_SHELL = [
   "/manifest.json",
   "/icons/icon-192.png",
@@ -63,6 +63,10 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin || url.pathname.startsWith("/api/")) return;
+
+  if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+    return;
+  }
 
   if (request.mode === "navigate") {
     event.respondWith(networkFirst(request));

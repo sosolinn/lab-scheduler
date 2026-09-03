@@ -1,16 +1,34 @@
 if ("serviceWorker" in navigator) {
-  const RELOAD_FLAG = "__camellab_sw_v5_reloaded__";
+  const isLocalDevelopment =
+    location.hostname === "localhost" || location.hostname === "127.0.0.1";
 
-  navigator.serviceWorker
-    .register("/sw.js", { updateViaCache: "none" })
-    .then((registration) => registration.update())
-    .catch((error) => {
-      console.error("PWA service worker registration failed:", error);
+  if (isLocalDevelopment) {
+    Promise.all([
+      navigator.serviceWorker
+        .getRegistrations()
+        .then((registrations) =>
+          Promise.all(registrations.map((registration) => registration.unregister()))
+        ),
+      "caches" in window
+        ? caches
+            .keys()
+            .then((keys) =>
+              Promise.all(
+                keys
+                  .filter((key) => key.startsWith("camellab-pwa-"))
+                  .map((key) => caches.delete(key))
+              )
+            )
+        : Promise.resolve()
+    ]).catch((error) => {
+      console.warn("本地开发缓存清理失败：", error);
     });
-
-  navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (window.sessionStorage.getItem(RELOAD_FLAG) === "1") return;
-    window.sessionStorage.setItem(RELOAD_FLAG, "1");
-    window.location.reload();
-  });
+  } else {
+    navigator.serviceWorker
+      .register("/sw.js", { updateViaCache: "none" })
+      .then((registration) => registration.update())
+      .catch((error) => {
+        console.error("PWA service worker registration failed:", error);
+      });
+  }
 }
