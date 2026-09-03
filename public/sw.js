@@ -76,10 +76,10 @@ self.addEventListener("fetch", (event) => {
 
       return networkPromise.catch(async () => {
         if (isNavigation) {
-          return caches.match("/");
+          return (await caches.match("/")) || Response.error();
         }
 
-        return undefined;
+        return Response.error();
       });
     })
   );
