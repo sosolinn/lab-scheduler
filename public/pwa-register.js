@@ -1,22 +1,16 @@
 if ("serviceWorker" in navigator) {
-  const registerServiceWorker = () => {
-    navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" }).catch((error) => {
+  const RELOAD_FLAG = "__camellab_sw_v5_reloaded__";
+
+  navigator.serviceWorker
+    .register("/sw.js", { updateViaCache: "none" })
+    .then((registration) => registration.update())
+    .catch((error) => {
       console.error("PWA service worker registration failed:", error);
     });
-  };
 
-  const scheduleRegistration = () => {
-    if ("requestIdleCallback" in window) {
-      window.requestIdleCallback(registerServiceWorker, { timeout: 2000 });
-      return;
-    }
-
-    window.setTimeout(registerServiceWorker, 1000);
-  };
-
-  if (document.readyState === "complete") {
-    scheduleRegistration();
-  } else {
-    window.addEventListener("load", scheduleRegistration, { once: true });
-  }
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (window.sessionStorage.getItem(RELOAD_FLAG) === "1") return;
+    window.sessionStorage.setItem(RELOAD_FLAG, "1");
+    window.location.reload();
+  });
 }
