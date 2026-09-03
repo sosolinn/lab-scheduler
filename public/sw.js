@@ -1,4 +1,4 @@
-const CACHE_NAME = "camellab-pwa-v2";
+const CACHE_NAME = "camellab-pwa-v3";
 const APP_SHELL = [
   "/",
   "/manifest.json",
