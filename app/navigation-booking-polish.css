@@ -1,0 +1,132 @@
+/* Final visual polish for weekly booking alignment and navigation icons. */
+
+.nav-item > span {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  flex: 0 0 20px;
+  place-items: center;
+  color: inherit !important;
+  font-size: 0 !important;
+  line-height: 0;
+}
+
+.nav-item > span::before {
+  content: "";
+  width: 18px;
+  height: 18px;
+  display: block;
+  background: currentColor;
+  -webkit-mask-image: var(--nav-icon);
+  mask-image: var(--nav-icon);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  transition: transform 140ms ease;
+}
+
+.nav-item[data-page="dashboard"] > span {
+  --nav-icon: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSIxLjkiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTMgMTAuNSAxMiAzbDkgNy41Ii8+PHBhdGggZD0iTTUuNSA5LjVWMjFoMTNWOS41Ii8+PHBhdGggZD0iTTkgMjF2LTZoNnY2Ii8+PC9zdmc+");
+}
+
+.nav-item[data-page="booking"] > span {
+  --nav-icon: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSIxLjkiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHJlY3QgeD0iMyIgeT0iNSIgd2lkdGg9IjE4IiBoZWlnaHQ9IjE2IiByeD0iMiIvPjxwYXRoIGQ9Ik0xNiAzdjRNOCAzdjRNMyAxMGgxOCIvPjxwYXRoIGQ9Ik04IDE0aC4wMU0xMiAxNGguMDFNMTYgMTRoLjAxTTggMThoLjAxTTEyIDE4aC4wMSIvPjwvc3ZnPg==");
+}
+
+.nav-item[data-page="duty"] > span {
+  --nav-icon: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSIxLjkiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHJlY3QgeD0iNSIgeT0iNCIgd2lkdGg9IjE0IiBoZWlnaHQ9IjE3IiByeD0iMiIvPjxwYXRoIGQ9Ik05IDQuNVYzaDZ2MS41Ii8+PHBhdGggZD0ibTkgMTMgMiAyIDQtNCIvPjxwYXRoIGQ9Ik05IDE4aDYiLz48L3N2Zz4=");
+}
+
+.nav-item[data-page="settings"] > span {
+  --nav-icon: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSIxLjkiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTQgMjF2LTdNNCAxMFYzTTEyIDIxdi05TTEyIDhWM00yMCAyMXYtNU0yMCAxMlYzIi8+PHBhdGggZD0iTTEgMTRoNk05IDhoNk0xNyAxNmg2Ii8+PC9zdmc+");
+}
+
+.nav-item:hover > span::before,
+.nav-item.active > span::before {
+  transform: scale(1.05);
+}
+
+.nav-item.active > span,
+.nav-item.active:hover > span,
+.nav-item:active > span {
+  color: inherit !important;
+}
+
+@media (min-width: 721px) {
+  .week-day-compact .week-day-header {
+    min-height: 76px;
+    height: 76px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    align-content: center;
+    column-gap: 8px;
+    row-gap: 3px;
+  }
+
+  .week-day-compact .week-day-name {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+  }
+
+  .week-day-compact .week-day-booking-count {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .week-day-compact .week-day-date {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: start;
+    margin-top: 0;
+  }
+
+  .week-day-detailed .week-day-header {
+    min-height: 76px;
+    height: 76px;
+  }
+}
+
+@media (max-width: 720px) {
+  .nav-item {
+    gap: 6px;
+  }
+
+  .nav-item > span {
+    width: 16px;
+    height: 16px;
+    flex-basis: 16px;
+  }
+
+  .nav-item > span::before {
+    width: 15px;
+    height: 15px;
+  }
+
+  .nav-item.active > span,
+  .nav-item.active:hover > span,
+  .nav-item:active > span {
+    color: inherit !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .nav-item {
+    gap: 4px;
+  }
+
+  .nav-item > span {
+    width: 14px;
+    height: 14px;
+    flex-basis: 14px;
+  }
+
+  .nav-item > span::before {
+    width: 14px;
+    height: 14px;
+  }
+}
