@@ -1,5 +1,6 @@
 (() => {
   const INSTALL_FLAG = "__LAB_TODAY_BOOKING_VIEW_INSTALLED__";
+  const RUNTIME_KEY = "__LAB_SCHEDULER_RUNTIME__";
   const PERSON_COLOR_STORAGE_KEY = "labSchedulerBookingPersonColorsV2";
   const GOLDEN_ANGLE = 137.508;
   let installTimer = 0;
@@ -53,6 +54,11 @@
   }
 
   function syncPersonColorRegistry() {
+    const runtime = window[RUNTIME_KEY];
+    if (!runtime) {
+      return;
+    }
+
     const cleanedRegistry = {};
     const usedSlots = new Set();
 
@@ -70,7 +76,7 @@
 
     const currentPeople = Array.from(
       new Set(
-        bookings
+        runtime.bookings
           .map((booking) => normalizePersonKey(booking.name))
           .filter(Boolean)
       )
@@ -117,7 +123,7 @@
     return {
       accent: `hsl(${hue.toFixed(1)} ${saturation}% ${accentLightness}%)`,
       border: `hsl(${hue.toFixed(1)} ${borderSaturation}% 79%)`,
-      background: `hsl(${hue.toFixed(1)} ${backgroundSaturation}% 97%)`
+      background: `hsl(${hue.toFixed(1)} ${backgroundSaturation}% 95%)`
     };
   }
 
@@ -142,7 +148,8 @@
   }
 
   function updateDashboardBookingHeading(today) {
-    const heading = dashboardBookingList
+    const runtime = window[RUNTIME_KEY];
+    const heading = runtime?.dashboardBookingList
       ?.closest(".dashboard-summary-card")
       ?.querySelector(".dashboard-summary-heading h3");
 
@@ -150,14 +157,19 @@
       heading.textContent = "今日预约情况";
     }
 
-    if (dashboardWeekRange) {
-      dashboardWeekRange.textContent = formatShortDate(today);
+    if (runtime?.dashboardWeekRange) {
+      runtime.dashboardWeekRange.textContent = runtime.formatShortDate(today);
     }
   }
 
   function renderTodayDashboardBookings() {
-    const today = getTodayString();
-    const todayBookings = sortBookings(bookings).filter(
+    const runtime = window[RUNTIME_KEY];
+    if (!runtime) {
+      return;
+    }
+
+    const today = runtime.getTodayString();
+    const todayBookings = runtime.sortBookings(runtime.bookings).filter(
       (booking) => booking.date === today
     );
 
@@ -165,17 +177,17 @@
     updateDashboardBookingHeading(today);
 
     if (todayBookings.length === 0) {
-      dashboardBookingList.innerHTML = createDashboardEmptyState(
+      runtime.dashboardBookingList.innerHTML = runtime.createDashboardEmptyState(
         "今日暂无预约",
         "点击右上方“超净台预约”添加今天的预约。"
       );
       return;
     }
 
-    dashboardBookingList.innerHTML = todayBookings
+    runtime.dashboardBookingList.innerHTML = todayBookings
       .map((booking) => {
-        const benchClass = getBenchClass(booking.bench);
-        const date = parseDateString(booking.date);
+        const benchClass = runtime.getBenchClass(booking.bench);
+        const date = runtime.parseDateString(booking.date);
 
         return `
           <div class="dashboard-summary-item dashboard-today-booking booking-person-colored">
@@ -185,10 +197,10 @@
             </div>
             <div class="summary-item-main">
               <div class="summary-item-title">
-                <strong>${escapeHtml(booking.name)}</strong>
-                <span class="summary-bench-badge ${benchClass}">${escapeHtml(booking.bench)}</span>
+                <strong>${runtime.escapeHtml(booking.name)}</strong>
+                <span class="summary-bench-badge ${benchClass}">${runtime.escapeHtml(booking.bench)}</span>
               </div>
-              <p>${escapeHtml(booking.startTime)}–${escapeHtml(booking.endTime)} · ${escapeHtml(booking.purpose || "未填写实验内容")}</p>
+              <p>${runtime.escapeHtml(booking.startTime)}–${runtime.escapeHtml(booking.endTime)} · ${runtime.escapeHtml(booking.purpose || "未填写实验内容")}</p>
             </div>
           </div>
         `;
@@ -196,7 +208,7 @@
       .join("");
 
     Array.from(
-      dashboardBookingList.querySelectorAll(".dashboard-today-booking")
+      runtime.dashboardBookingList.querySelectorAll(".dashboard-today-booking")
     ).forEach((item, index) => {
       applyPersonColor(item, todayBookings[index]?.name);
     });
@@ -225,15 +237,22 @@
   }
 
   function decorateWeeklyBookings() {
-    const today = getTodayString();
-    const sortedBookings = sortBookings(bookings);
-    const dayElements = Array.from(bookingList.querySelectorAll(".week-day"));
+    const runtime = window[RUNTIME_KEY];
+    if (!runtime) {
+      return;
+    }
+
+    const today = runtime.getTodayString();
+    const sortedBookings = runtime.sortBookings(runtime.bookings);
+    const dayElements = Array.from(
+      runtime.bookingList.querySelectorAll(".week-day")
+    );
 
     syncPersonColorRegistry();
 
     dayElements.forEach((dayElement, dayIndex) => {
-      const date = addDays(visibleWeekStart, dayIndex);
-      const dateString = dateToString(date);
+      const date = runtime.addDays(runtime.visibleWeekStart, dayIndex);
+      const dateString = runtime.dateToString(date);
       const isToday = dateString === today;
       const dayBookings = sortedBookings.filter(
         (booking) => booking.date === dateString
@@ -288,13 +307,15 @@
       return true;
     }
 
+    const runtime = window[RUNTIME_KEY];
     if (
-      typeof renderBookings !== "function" ||
-      typeof renderDashboardBookings !== "function" ||
-      typeof sortBookings !== "function" ||
-      typeof getTodayString !== "function" ||
-      !bookingList ||
-      !dashboardBookingList
+      !runtime ||
+      typeof runtime.renderBookings !== "function" ||
+      typeof runtime.renderDashboardBookings !== "function" ||
+      typeof runtime.sortBookings !== "function" ||
+      typeof runtime.getTodayString !== "function" ||
+      !runtime.bookingList ||
+      !runtime.dashboardBookingList
     ) {
       return false;
     }
@@ -302,21 +323,21 @@
     window[INSTALL_FLAG] = true;
     syncPersonColorRegistry();
 
-    const renderBookingsWithPermissions = renderBookings;
-    renderBookings = function renderTodayFocusedBookings() {
+    const renderBookingsWithPermissions = runtime.renderBookings;
+    runtime.renderBookings = function renderTodayFocusedBookings() {
       const result = renderBookingsWithPermissions();
       decorateWeeklyBookings();
       return result;
     };
 
-    renderDashboardBookings = renderTodayDashboardBookings;
+    runtime.renderDashboardBookings = renderTodayDashboardBookings;
 
-    renderDashboardBookings();
-    renderBookings();
+    runtime.renderDashboardBookings();
+    runtime.renderBookings();
 
     window.addEventListener("lab:bookings-refreshed", () => {
       syncPersonColorRegistry();
-      renderDashboardBookings();
+      runtime.renderDashboardBookings();
       decorateWeeklyBookings();
     });
 

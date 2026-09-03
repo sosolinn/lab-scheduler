@@ -1,4 +1,5 @@
 const INITIALIZED_FLAG = "__LAB_SCHEDULER_LEGACY_INITIALIZED__";
+const RUNTIME_KEY = "__LAB_SCHEDULER_RUNTIME__";
 const PIPETTE_TIPS_CHECK_TEXT = "插好 5 mL 与 10 μL 枪头";
 const CELL_ROOM_MOPPING_CHECK_TEXT = "细胞房拖地清洁";
 
@@ -50,6 +51,7 @@ function createRuntimeSource(source) {
 
   return `(() => {
     const INITIALIZED_FLAG = ${JSON.stringify(INITIALIZED_FLAG)};
+    const RUNTIME_KEY = ${JSON.stringify(RUNTIME_KEY)};
 
     if (window[INITIALIZED_FLAG]) {
       window.dispatchEvent(new Event("lab:app-ready"));
@@ -60,6 +62,40 @@ function createRuntimeSource(source) {
 
     try {
       ${preparedSource}
+
+      window[RUNTIME_KEY] = {
+        get bookings() { return bookings; },
+        get duties() { return duties; },
+        get visibleWeekStart() { return visibleWeekStart; },
+        get renderBookings() { return renderBookings; },
+        set renderBookings(renderer) { renderBookings = renderer; },
+        get renderDashboardBookings() { return renderDashboardBookings; },
+        set renderDashboardBookings(renderer) { renderDashboardBookings = renderer; },
+        get renderDuties() { return renderDuties; },
+        set renderDuties(renderer) { renderDuties = renderer; },
+        bookingList,
+        dashboardBookingList,
+        dashboardWeekRange,
+        dutyList,
+        dutyDateInput,
+        dutyForm,
+        ALL_DUTY_ITEMS,
+        addDays,
+        createDashboardEmptyState,
+        createEmptyState,
+        dateToString,
+        escapeHtml,
+        formatDate,
+        formatShortDate,
+        getBenchClass,
+        getTodayString,
+        padNumber,
+        parseDateString,
+        renderDutyChecklist,
+        sortBookings,
+        sortDuties
+      };
+
       requestAnimationFrame(() => {
         window.dispatchEvent(new Event("lab:app-ready"));
       });

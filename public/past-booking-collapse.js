@@ -1,5 +1,6 @@
 (() => {
   const INSTALL_FLAG = "__LAB_PAST_BOOKING_COLLAPSE_INSTALLED__";
+  const RUNTIME_KEY = "__LAB_SCHEDULER_RUNTIME__";
   const BEIJING_TIME_ZONE = "Asia/Shanghai";
   const expandedDates = new Set();
   let installTimer = 0;
@@ -74,30 +75,29 @@
   }
 
   function decoratePastBookings() {
-    let runtimeAvailable = false;
-
-    try {
-      runtimeAvailable = Boolean(
-        bookingList &&
-          typeof sortBookings === "function" &&
-          typeof addDays === "function" &&
-          typeof dateToString === "function" &&
-          visibleWeekStart
-      );
-    } catch {
-      runtimeAvailable = false;
-    }
+    const runtime = window[RUNTIME_KEY];
+    const runtimeAvailable = Boolean(
+      runtime?.bookingList &&
+        typeof runtime.sortBookings === "function" &&
+        typeof runtime.addDays === "function" &&
+        typeof runtime.dateToString === "function" &&
+        runtime.visibleWeekStart
+    );
 
     if (!runtimeAvailable) {
       return false;
     }
 
     const now = getBeijingNow();
-    const sortedBookings = sortBookings(bookings);
-    const dayElements = Array.from(bookingList.querySelectorAll(".week-day"));
+    const sortedBookings = runtime.sortBookings(runtime.bookings);
+    const dayElements = Array.from(
+      runtime.bookingList.querySelectorAll(".week-day")
+    );
 
     dayElements.forEach((dayElement, dayIndex) => {
-      const dateString = dateToString(addDays(visibleWeekStart, dayIndex));
+      const dateString = runtime.dateToString(
+        runtime.addDays(runtime.visibleWeekStart, dayIndex)
+      );
       const dayBookings = sortedBookings.filter(
         (booking) => booking.date === dateString
       );
@@ -150,15 +150,10 @@
       return true;
     }
 
-    let runtimeAvailable = false;
-
-    try {
-      runtimeAvailable = Boolean(
-        bookingList && typeof renderBookings === "function"
-      );
-    } catch {
-      runtimeAvailable = false;
-    }
+    const runtime = window[RUNTIME_KEY];
+    const runtimeAvailable = Boolean(
+      runtime?.bookingList && typeof runtime.renderBookings === "function"
+    );
 
     if (!runtimeAvailable) {
       return false;
@@ -166,14 +161,14 @@
 
     window[INSTALL_FLAG] = true;
 
-    const previousRenderBookings = renderBookings;
-    renderBookings = function renderBookingsWithPastCollapse() {
+    const previousRenderBookings = runtime.renderBookings;
+    runtime.renderBookings = function renderBookingsWithPastCollapse() {
       const result = previousRenderBookings();
       window.requestAnimationFrame(decoratePastBookings);
       return result;
     };
 
-    bookingList.addEventListener("click", (event) => {
+    runtime.bookingList.addEventListener("click", (event) => {
       const toggle = event.target.closest(".past-booking-toggle");
       if (!toggle) {
         return;

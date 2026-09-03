@@ -55,14 +55,10 @@
   --booking-person-bg: #f5f8f5;
 }
 
-.dashboard-today-booking {
+.dashboard-summary-item.dashboard-today-booking {
   border-color: var(--booking-person-border);
   border-left-width: 4px;
-  background: linear-gradient(
-    90deg,
-    var(--booking-person-bg) 0%,
-    #ffffff 78%
-  );
+  background: var(--booking-person-bg);
 }
 
 .dashboard-today-booking .booking-person-date-block {
