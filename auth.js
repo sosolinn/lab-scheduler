@@ -165,7 +165,13 @@ function __labAuthCreateUi() {
 
   userInfo.classList.add("auth-user-info");
   userInfo.innerHTML = `
-    <button type="button" class="auth-account-button" id="labAuthAccountButton">
+    <button
+      type="button"
+      class="auth-account-button"
+      id="labAuthAccountButton"
+      aria-label="打开登录窗口"
+      title="登录楷模实验室"
+    >
       <span class="avatar" id="labAuthAvatar">登</span>
       <span class="auth-account-copy">
         <strong id="labAuthAccountName">登录</strong>
@@ -175,7 +181,8 @@ function __labAuthCreateUi() {
     <button type="button" class="auth-logout-button" id="labAuthLogoutButton" hidden>退出</button>
   `;
 
-  document.body.insertAdjacentHTML(
+  const modalHost = userInfo.closest(".app-layout") || document.body;
+  modalHost.insertAdjacentHTML(
     "beforeend",
     `<div class="auth-modal" id="labAuthModal" hidden>
       <button type="button" class="auth-modal-backdrop" data-close-auth aria-label="关闭登录窗口"></button>
@@ -257,6 +264,10 @@ function __labAuthCreateUi() {
 }
 
 window.__labOpenAuthDialog = function () {
+  if (!document.querySelector("#labAuthModal")) {
+    __labAuthCreateUi();
+  }
+
   const modal = document.querySelector("#labAuthModal");
   if (!modal) return;
   modal.hidden = false;
