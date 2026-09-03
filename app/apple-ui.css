@@ -1,0 +1,453 @@
+:root {
+  --primary: #0071e3;
+  --primary-dark: #0066cc;
+  --primary-light: #eef6ff;
+  --background: #f5f5f7;
+  --surface: #ffffff;
+  --border: rgba(0, 0, 0, 0.08);
+  --text: #1d1d1f;
+  --text-secondary: #6e6e73;
+  --sidebar: #fbfbfd;
+}
+
+html {
+  background: var(--background);
+  color-scheme: light;
+}
+
+body {
+  color: var(--text);
+  background:
+    radial-gradient(circle at 78% -8%, rgba(0, 113, 227, 0.055), transparent 30rem),
+    var(--background);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Sidebar */
+.sidebar {
+  color: var(--text);
+  background: rgba(251, 251, 253, 0.88);
+  border-right: 1px solid rgba(0, 0, 0, 0.065);
+  box-shadow: none;
+  backdrop-filter: saturate(180%) blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+}
+
+.brand {
+  gap: 13px;
+}
+
+.brand-icon {
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.045);
+}
+
+.brand-icon img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.brand h1 {
+  color: var(--text);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.brand p,
+.sidebar-footer {
+  color: #86868b;
+}
+
+.nav-menu {
+  gap: 6px;
+}
+
+.nav-item {
+  color: #424245;
+  border-radius: 13px;
+  font-weight: 520;
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.nav-item:hover {
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.035);
+}
+
+.nav-item.active {
+  color: #0066cc;
+  background: #eaf4ff;
+  box-shadow: inset 0 0 0 1px rgba(0, 113, 227, 0.055);
+}
+
+.nav-item.active span {
+  color: var(--primary);
+}
+
+/* Header */
+.topbar h2 {
+  color: var(--text);
+  font-size: 30px;
+  font-weight: 650;
+  letter-spacing: -0.035em;
+}
+
+.user-info,
+.auth-account-button {
+  border-radius: 999px;
+}
+
+.auth-account-button:hover {
+  background: rgba(0, 0, 0, 0.035);
+}
+
+.avatar,
+.settings-account-avatar {
+  color: #0066cc;
+  background: #f0f7ff;
+  border-color: rgba(0, 113, 227, 0.16);
+}
+
+.auth-logout-button {
+  border-color: rgba(0, 0, 0, 0.09);
+  border-radius: 999px;
+  color: #6e6e73;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+/* Dashboard hero */
+.welcome-card {
+  position: relative;
+  overflow: hidden;
+  color: var(--text);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(247, 250, 255, 0.97));
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 26px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.055);
+}
+
+.welcome-card::after {
+  content: "";
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  right: -100px;
+  top: -160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 113, 227, 0.10), rgba(0, 113, 227, 0));
+  pointer-events: none;
+}
+
+.welcome-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.welcome-label {
+  color: #0066cc;
+  background: rgba(0, 113, 227, 0.065);
+  border-color: rgba(0, 113, 227, 0.10);
+  font-weight: 650;
+}
+
+.welcome-card h3 {
+  color: var(--text);
+  font-size: 27px;
+  font-weight: 650;
+  letter-spacing: -0.035em;
+}
+
+.welcome-card p {
+  color: #6e6e73;
+}
+
+.welcome-action-button {
+  color: #ffffff;
+  background: var(--primary);
+  border: 1px solid transparent;
+  border-radius: 13px;
+  font-weight: 650;
+  box-shadow: none;
+}
+
+.welcome-action-button:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: none;
+}
+
+.welcome-action-button + .welcome-action-button {
+  color: #0066cc;
+  background: #edf6ff;
+  border-color: rgba(0, 113, 227, 0.08);
+}
+
+.welcome-action-button + .welcome-action-button:hover {
+  background: #e5f2ff;
+}
+
+/* Cards */
+.dashboard-summary-card,
+.content-card,
+.auth-dialog {
+  background: rgba(255, 255, 255, 0.93);
+  border: 1px solid rgba(0, 0, 0, 0.065);
+  border-radius: 22px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.025), 0 10px 32px rgba(0, 0, 0, 0.04);
+}
+
+.dashboard-summary-heading {
+  border-bottom-color: rgba(0, 0, 0, 0.065);
+}
+
+.dashboard-summary-kicker {
+  color: #0066cc;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+}
+
+.dashboard-summary-heading h3,
+.card-heading h3 {
+  color: var(--text);
+  font-weight: 650;
+  letter-spacing: -0.018em;
+}
+
+.summary-link-button,
+.duty-check-all-button,
+.settings-secondary-button,
+.auth-register-button,
+.booking-edit-button {
+  color: #0066cc;
+  background: #f0f7ff;
+  border-color: rgba(0, 113, 227, 0.10);
+  border-radius: 999px;
+  font-weight: 650;
+}
+
+.summary-link-button:hover,
+.duty-check-all-button:hover,
+.settings-secondary-button:hover,
+.auth-register-button:hover,
+.booking-edit-button:hover {
+  color: #005eb8;
+  background: #e7f3ff;
+  border-color: rgba(0, 113, 227, 0.16);
+}
+
+.dashboard-summary-item,
+.record-item,
+.duty-check-group,
+.duty-record-group,
+.settings-account-summary,
+.settings-user-row,
+.settings-user-empty,
+.dashboard-empty-state,
+.empty-state {
+  border-color: rgba(0, 0, 0, 0.07);
+  border-radius: 16px;
+  box-shadow: none;
+}
+
+.record-item,
+.duty-check-group,
+.duty-record-group,
+.settings-account-summary,
+.settings-user-row,
+.settings-user-empty,
+.dashboard-empty-state,
+.empty-state {
+  background: #fbfbfd;
+}
+
+/* Forms */
+input,
+select,
+textarea {
+  min-height: 44px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.96);
+  border-color: #d2d2d7;
+  border-radius: 13px;
+}
+
+textarea {
+  min-height: auto;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: rgba(0, 113, 227, 0.72);
+  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.10);
+}
+
+.primary-button {
+  min-height: 44px;
+  padding-inline: 18px;
+  border-radius: 13px;
+  background: var(--primary);
+  font-weight: 650;
+  box-shadow: none;
+}
+
+.primary-button:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.delete-button,
+.settings-danger-button,
+.settings-small-button.danger {
+  border-radius: 12px;
+}
+
+/* Weekly booking view: preserve booking/person colors, soften the surrounding calendar */
+.week-nav-button,
+.week-today-button {
+  color: #424245;
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(0, 0, 0, 0.08);
+  border-radius: 11px;
+}
+
+.week-nav-button:hover,
+.week-today-button:hover {
+  color: #0066cc;
+  background: #f0f7ff;
+  border-color: rgba(0, 113, 227, 0.12);
+}
+
+.week-day {
+  background: #fafafa;
+  border-color: rgba(0, 0, 0, 0.07);
+  border-radius: 15px;
+}
+
+.week-day.today {
+  border-color: rgba(0, 113, 227, 0.28);
+  box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.055);
+}
+
+.week-day-header {
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom-color: rgba(0, 0, 0, 0.065);
+}
+
+.week-day.today .week-day-header {
+  background: #f2f8ff;
+}
+
+.today-label {
+  background: var(--primary);
+}
+
+/* Auth and settings */
+.auth-modal-backdrop {
+  background: rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.auth-dialog {
+  border-radius: 24px;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.18);
+}
+
+.auth-dialog-logo {
+  background: #f0f7ff;
+  color: #0066cc;
+  border: 1px solid rgba(0, 113, 227, 0.10);
+}
+
+.auth-dialog-close {
+  color: #6e6e73;
+  background: #f2f2f7;
+}
+
+.settings-security-note {
+  color: #515154;
+  background: #f7faff;
+  border-color: rgba(0, 113, 227, 0.10);
+  border-radius: 14px;
+}
+
+.settings-detail-row dd {
+  color: #424245;
+}
+
+.settings-small-button {
+  color: #0066cc;
+  border-color: rgba(0, 113, 227, 0.10);
+  background: #ffffff;
+  border-radius: 11px;
+}
+
+.settings-small-button:hover {
+  background: #f0f7ff;
+}
+
+/* Motion */
+button,
+.dashboard-summary-card,
+.content-card,
+.week-day {
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+@media (max-width: 720px) {
+  body {
+    background: #f5f5f7;
+  }
+
+  .sidebar {
+    background: rgba(251, 251, 253, 0.94);
+    border-right: 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.065);
+  }
+
+  .nav-item {
+    border-radius: 12px;
+  }
+
+  .topbar h2 {
+    font-size: 26px;
+  }
+
+  .welcome-card {
+    padding: 24px;
+    border-radius: 22px;
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.045);
+  }
+
+  .welcome-card h3 {
+    font-size: 24px;
+  }
+
+  .dashboard-summary-card,
+  .content-card {
+    border-radius: 19px;
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.035);
+  }
+
+  .auth-dialog {
+    border-radius: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  .dashboard-summary-card,
+  .content-card,
+  .week-day,
+  .nav-item {
+    transition: none;
+  }
+}
