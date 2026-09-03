@@ -215,7 +215,9 @@ const SETTINGS_PAGE_MARKUP = `
       </section>`;
 
 function readProjectFile(filename) {
-  return fs.readFileSync(path.join(process.cwd(), filename), "utf8");
+  return fs
+    .readFileSync(path.join(process.cwd(), filename), "utf8")
+    .replace(/\r\n?/g, "\n");
 }
 
 function ensureCo2CylinderMarkup(markup) {
