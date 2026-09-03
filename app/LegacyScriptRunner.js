@@ -1,98 +1,6 @@
-"use client";
-
-import { useEffect } from "react";
-
 const INITIALIZED_FLAG = "__LAB_SCHEDULER_LEGACY_INITIALIZED__";
 const PIPETTE_TIPS_CHECK_TEXT = "插好 5 mL 与 10 μL 枪头";
 const CELL_ROOM_MOPPING_CHECK_TEXT = "细胞房拖地清洁";
-
-function createDutyOption(value) {
-  const option = document.createElement("label");
-  option.className = "duty-check-option";
-
-  const input = document.createElement("input");
-  input.type = "checkbox";
-  input.className = "duty-check-input";
-  input.name = "dutyCheck";
-  input.value = value;
-
-  const text = document.createElement("span");
-  text.textContent = value;
-
-  option.append(input, text);
-  return option;
-}
-
-function ensurePipetteTipsMarkup() {
-  if (
-    document.querySelector(
-      `input[name="dutyCheck"][value="${PIPETTE_TIPS_CHECK_TEXT}"]`
-    )
-  ) {
-    return;
-  }
-
-  const pipetteInput = document.querySelector(
-    'input[name="dutyCheck"][value="移液器已归位"]'
-  );
-  const pipetteOption = pipetteInput?.closest("label.duty-check-option");
-
-  if (!pipetteOption) {
-    return;
-  }
-
-  pipetteOption.insertAdjacentElement(
-    "afterend",
-    createDutyOption(PIPETTE_TIPS_CHECK_TEXT)
-  );
-}
-
-function ensureCellRoomMoppingMarkup() {
-  if (
-    document.querySelector(
-      `input[name="dutyCheck"][value="${CELL_ROOM_MOPPING_CHECK_TEXT}"]`
-    )
-  ) {
-    return;
-  }
-
-  const checklist = document.querySelector("#dutyForm .duty-checklist");
-  if (!checklist) {
-    return;
-  }
-
-  const group = document.createElement("fieldset");
-  group.className = "duty-check-group duty-priority-group";
-  group.setAttribute(
-    "aria-label",
-    `7. 值日重点：${CELL_ROOM_MOPPING_CHECK_TEXT}`
-  );
-
-  const priorityOption = createDutyOption(CELL_ROOM_MOPPING_CHECK_TEXT);
-  priorityOption.classList.add("duty-priority-option");
-  group.appendChild(priorityOption);
-  checklist.appendChild(group);
-
-  const abnormalLabel = document.querySelector(
-    'label[for="dutyAbnormal"]'
-  );
-  if (abnormalLabel) {
-    abnormalLabel.textContent = "异常记录";
-  }
-}
-
-function ensureDutyChecklistMarkup() {
-  ensurePipetteTipsMarkup();
-  ensureCellRoomMoppingMarkup();
-
-  const selectionCount = document.querySelector("#dutySelectionCount");
-  if (selectionCount) {
-    selectionCount.textContent = selectionCount.textContent.replace(
-      /\/\d+ 项$/,
-      "/18 项"
-    );
-  }
-}
 
 function ensurePipetteTipsSource(source) {
   if (source.includes(`"${PIPETTE_TIPS_CHECK_TEXT}"`)) {
@@ -135,27 +43,40 @@ function downgradeRecoverableDatabaseLogs(source) {
   );
 }
 
-export default function LegacyScriptRunner({ source }) {
-  useEffect(() => {
+function createRuntimeSource(source) {
+  const preparedSource = downgradeRecoverableDatabaseLogs(
+    ensureDutyChecklistSource(source)
+  );
+
+  return `(() => {
+    const INITIALIZED_FLAG = ${JSON.stringify(INITIALIZED_FLAG)};
+
     if (window[INITIALIZED_FLAG]) {
       window.dispatchEvent(new Event("lab:app-ready"));
       return;
     }
 
     window[INITIALIZED_FLAG] = true;
-    ensureDutyChecklistMarkup();
+    document.documentElement.dataset.labRuntime = "starting";
 
-    const script = document.createElement("script");
-    script.setAttribute("data-lab-scheduler-runtime", "true");
-    script.textContent = downgradeRecoverableDatabaseLogs(
-      ensureDutyChecklistSource(source)
-    );
-    document.body.appendChild(script);
+    try {
+      ${preparedSource}
+      document.documentElement.dataset.labRuntime = "ready";
+      requestAnimationFrame(() => {
+        window.dispatchEvent(new Event("lab:app-ready"));
+      });
+    } catch (error) {
+      document.documentElement.dataset.labRuntime = "error";
+      console.error("楷模实验室功能初始化失败：", error);
+    }
+  })();`;
+}
 
-    requestAnimationFrame(() => {
-      window.dispatchEvent(new Event("lab:app-ready"));
-    });
-  }, [source]);
-
-  return null;
+export default function LegacyScriptRunner({ source }) {
+  return (
+    <script
+      data-lab-scheduler-runtime="true"
+      dangerouslySetInnerHTML={{ __html: createRuntimeSource(source) }}
+    />
+  );
 }

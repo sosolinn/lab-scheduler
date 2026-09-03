@@ -39,7 +39,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="zh-CN">
       <body>
-        <Script src="/pwa-register.js" strategy="afterInteractive" />
+        <Script src="/pwa-register.js?v=6" strategy="afterInteractive" />
         <Script src="/pwa-install.js" strategy="afterInteractive" />
         {children}
         <Script src="/account-name-merge.js" strategy="afterInteractive" />
