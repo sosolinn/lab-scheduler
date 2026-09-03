@@ -1,11 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
-
-import LegacyScriptRunner from "./LegacyScriptRunner";
+import Script from "next/script";
 
 export const dynamic = "force-static";
 
 const CO2_CYLINDER_CHECK_TEXT = "CO₂钢瓶气体充足";
+const PIPETTE_TIPS_CHECK_TEXT = "插好 5 mL 与 10 μL 枪头";
+const CELL_ROOM_MOPPING_CHECK_TEXT = "细胞房拖地清洁";
 
 const SETTINGS_NAV_MARKUP = `
           <button class="nav-item" data-page="settings">
@@ -216,40 +217,61 @@ function readProjectFile(filename) {
   return fs.readFileSync(path.join(process.cwd(), filename), "utf8");
 }
 
-function ensureCo2CylinderMarkup(markup) {
-  let result = markup.replaceAll("已勾选 0/15 项", "已勾选 0/16 项");
+function createDutyOptionMarkup(value, extraClass = "") {
+  const className = extraClass
+    ? `duty-check-option ${extraClass}`
+    : "duty-check-option";
 
-  if (result.includes(`value="${CO2_CYLINDER_CHECK_TEXT}"`)) {
-    return result;
+  return `<label class="${className}">
+                    <input type="checkbox" class="duty-check-input" name="dutyCheck" value="${value}">
+                    <span>${value}</span>
+                  </label>`;
+}
+
+function ensureDutyMarkup(markup) {
+  let result = markup
+    .replaceAll("已勾选 0/15 项", "已勾选 0/18 项")
+    .replaceAll("已勾选 0/16 项", "已勾选 0/18 项")
+    .replace(
+      '<label for="dutyAbnormal">7. 异常记录</label>',
+      '<label for="dutyAbnormal">异常记录</label>'
+    );
+
+  if (!result.includes(`value="${CO2_CYLINDER_CHECK_TEXT}"`)) {
+    result = result.replace(
+      /(<label class="duty-check-option">\s*<input[^>]*value="温度、CO₂浓度正常，无报警"[^>]*>\s*<span>温度、CO₂浓度正常，无报警<\/span>\s*<\/label>)/,
+      `$1\n                  ${createDutyOptionMarkup(CO2_CYLINDER_CHECK_TEXT)}`
+    );
   }
 
-  const temperatureOptionPattern =
-    /(<label class="duty-check-option">\s*<input[^>]*value="温度、CO₂浓度正常，无报警"[^>]*>\s*<span>温度、CO₂浓度正常，无报警<\/span>\s*<\/label>)/;
-  const lineBreak = result.includes("\r\n") ? "\r\n" : "\n";
-  const indentation = "                  ";
-  const cylinderOption = [
-    '<label class="duty-check-option">',
-    `  <input type="checkbox" class="duty-check-input" name="dutyCheck" value="${CO2_CYLINDER_CHECK_TEXT}">`,
-    `  <span>${CO2_CYLINDER_CHECK_TEXT}</span>`,
-    "</label>"
-  ]
-    .map((line, index) => `${index === 0 ? "" : indentation}${line}`)
-    .join(lineBreak);
+  if (!result.includes(`value="${PIPETTE_TIPS_CHECK_TEXT}"`)) {
+    result = result.replace(
+      /(<label class="duty-check-option">\s*<input[^>]*value="移液器已归位"[^>]*>\s*<span>移液器已归位<\/span>\s*<\/label>)/,
+      `$1\n                  ${createDutyOptionMarkup(PIPETTE_TIPS_CHECK_TEXT)}`
+    );
+  }
 
-  return result.replace(
-    temperatureOptionPattern,
-    `$1${lineBreak}${indentation}${cylinderOption}`
-  );
+  if (!result.includes(`value="${CELL_ROOM_MOPPING_CHECK_TEXT}"`)) {
+    const priorityMarkup = `
+                <fieldset class="duty-check-group duty-priority-group" aria-label="7. 值日重点：${CELL_ROOM_MOPPING_CHECK_TEXT}">
+                  ${createDutyOptionMarkup(CELL_ROOM_MOPPING_CHECK_TEXT, "duty-priority-option")}
+                </fieldset>`;
+
+    result = result.replace(
+      /(<fieldset class="duty-check-group">\s*<legend>6\. 废弃物处理<\/legend>[\s\S]*?<\/fieldset>)(\s*<\/div>\s*<div class="form-group duty-abnormal-group">)/,
+      `$1${priorityMarkup}$2`
+    );
+  }
+
+  return result;
 }
 
 function ensureSettingsMarkup(markup) {
   let result = markup;
 
   if (!result.includes('data-page="settings"')) {
-    const dutyNavigationPattern =
-      /(<button class="nav-item" data-page="duty">[\s\S]*?<\/button>)(\s*<\/nav>)/;
     result = result.replace(
-      dutyNavigationPattern,
+      /(<button class="nav-item" data-page="duty">[\s\S]*?<\/button>)(\s*<\/nav>)/,
       `$1${SETTINGS_NAV_MARKUP}$2`
     );
   }
@@ -287,51 +309,11 @@ function applyDisplayTextReplacements(markup) {
   ];
 
   const replacedMarkup = replacements.reduce(
-    (result, [source, replacement]) =>
-      result.replaceAll(source, replacement),
+    (result, [source, replacement]) => result.replaceAll(source, replacement),
     markup
   );
 
-  return ensureSettingsMarkup(
-    ensureCo2CylinderMarkup(replacedMarkup)
-  );
-}
-
-function ensureCo2CylinderScript(scriptSource) {
-  if (scriptSource.includes(`"${CO2_CYLINDER_CHECK_TEXT}"`)) {
-    return scriptSource;
-  }
-
-  const checklistPattern =
-    /("温度、CO₂浓度正常，无报警",)(\r?\n)(\s*)"培养箱门关闭严密",/;
-
-  return scriptSource.replace(
-    checklistPattern,
-    (match, temperatureItem, lineBreak, indentation) =>
-      `${temperatureItem}${lineBreak}${indentation}"${CO2_CYLINDER_CHECK_TEXT}",${lineBreak}${indentation}"培养箱门关闭严密",`
-  );
-}
-
-function ensureSettingsPageTitle(scriptSource) {
-  if (scriptSource.includes('settings: "设置"')) {
-    return scriptSource;
-  }
-
-  return scriptSource.replace(
-    /(const pageTitles = \{[\s\S]*?duty:\s*"值日管理")(\s*\};)/,
-    '$1,\n  settings: "设置"$2'
-  );
-}
-
-function applyScriptTextReplacements(scriptSource) {
-  const replacedScript = scriptSource.replaceAll(
-    "完成左侧检查并保存后，记录会显示在这里。",
-    "完成检查并保存后，记录会显示在这里。"
-  );
-
-  return ensureSettingsPageTitle(
-    ensureCo2CylinderScript(replacedScript)
-  );
+  return ensureSettingsMarkup(ensureDutyMarkup(replacedMarkup));
 }
 
 function getLegacyMarkup() {
@@ -352,27 +334,6 @@ function getLegacyMarkup() {
 
 export default function HomePage() {
   const markup = getLegacyMarkup();
-  const legacyScript = readProjectFile("script.js");
-  const authScript = readProjectFile("auth.js");
-  const databaseBridge = readProjectFile("database-bridge.js");
-  const dutyDatabaseBridge = readProjectFile("duty-database-bridge.js");
-  const peoplePickerScript = readProjectFile("people-picker.js");
-  const dutyPeopleScript = readProjectFile("duty-people.js");
-  const bookingPeopleScript = readProjectFile("booking-people.js");
-  const peoplePickerControlScript = readProjectFile(
-    "people-picker-control.js"
-  );
-  const dutyAuthRulesScript = readProjectFile("duty-auth-rules.js");
-  const dutyRulesScript = readProjectFile("duty-rules.js");
-  const bookingAuthRulesScript = readProjectFile(
-    "booking-auth-rules.js"
-  );
-  const settingsAccountScript = readProjectFile(
-    "settings-account.js"
-  );
-  const scriptSource = applyScriptTextReplacements(
-    `${legacyScript}\n\n${authScript}\n\n${databaseBridge}\n\n${dutyDatabaseBridge}\n\n${peoplePickerScript}\n\n${dutyPeopleScript}\n\n${bookingPeopleScript}\n\n${peoplePickerControlScript}\n\n${dutyAuthRulesScript}\n\n${dutyRulesScript}\n\n${bookingAuthRulesScript}\n\n${settingsAccountScript}`
-  );
 
   return (
     <>
@@ -380,7 +341,7 @@ export default function HomePage() {
         style={{ display: "contents" }}
         dangerouslySetInnerHTML={{ __html: markup }}
       />
-      <LegacyScriptRunner source={scriptSource} />
+      <Script src="/legacy-runtime" strategy="afterInteractive" />
     </>
   );
 }
