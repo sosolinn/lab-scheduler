@@ -43,7 +43,7 @@ const SPLASH_STYLES = `
     display: grid;
     place-items: center;
     overflow: hidden;
-    background: #1f3f7a;
+    background: #f5f5f7;
     opacity: 1;
     visibility: visible;
     transition: opacity 220ms ease, visibility 220ms ease;
@@ -53,7 +53,7 @@ const SPLASH_STYLES = `
     width: 100%;
     height: 100%;
     object-fit: contain;
-    background: #1f3f7a;
+    background: #f5f5f7;
   }
 
   #labStartupSplash.is-hidden {
