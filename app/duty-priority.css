@@ -33,7 +33,11 @@
   left: 18px;
   top: 50%;
   width: 20px;
+  min-width: 20px;
+  max-width: 20px;
   height: 20px;
+  min-height: 20px;
+  max-height: 20px;
   margin: 0;
   transform: translateY(-50%);
   accent-color: #4f46e5;
@@ -66,7 +70,11 @@
   .duty-priority-option .duty-check-input {
     left: 14px;
     width: 19px;
+    min-width: 19px;
+    max-width: 19px;
     height: 19px;
+    min-height: 19px;
+    max-height: 19px;
   }
 
   .duty-priority-option span {
