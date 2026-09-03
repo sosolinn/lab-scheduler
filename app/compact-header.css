@@ -29,7 +29,7 @@
   line-height: 1.3;
 }
 
-.duty-check-option {
+.duty-check-option:not(.duty-priority-option) {
   display: grid;
   grid-template-columns: 17px minmax(0, 1fr);
   align-items: start;
@@ -48,7 +48,7 @@
   margin-top: 0;
 }
 
-.duty-check-option > .duty-check-input {
+.duty-check-option:not(.duty-priority-option) > .duty-check-input {
   width: 17px;
   min-width: 17px;
   max-width: 17px;
