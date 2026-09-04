@@ -319,7 +319,7 @@ function applyDisplayTextReplacements(markup) {
     ],
     ['<p class="eyebrow">实验室公共设备管理</p>', ""],
     ["<h1>LabScheduler</h1>", "<h1>楷模实验室</h1>"],
-    ["<p>LabScheduler v1.3</p>", "<p>楷模实验室 v4.1</p>"],
+    ["<p>LabScheduler v1.3</p>", "<p>楷模实验室 v4.2</p>"],
     ["值班人员、完成进度与异常情况", "值日人员、完成进度与异常情况"],
     [
       "设置值日日期和值班人，并勾选已完成或状态正常的项目",
