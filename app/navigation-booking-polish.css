@@ -98,11 +98,15 @@
     display: none;
   }
 
+  /* 随手机宽度自动缩放，始终保持完整单行显示。 */
   #dashboard .welcome-card h3 {
+    width: 100%;
+    max-width: 100%;
     margin-bottom: 0;
-    font-size: 18px;
+    font-size: clamp(13px, 4.05vw, 18px);
     line-height: 1.35;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.04em;
+    text-align: center;
     white-space: nowrap;
   }
 
@@ -158,7 +162,8 @@
 
 @media (max-width: 360px) {
   #dashboard .welcome-card h3 {
-    font-size: 16px;
+    font-size: clamp(12px, 4vw, 14.5px);
+    letter-spacing: -0.05em;
   }
 
   .nav-menu {
